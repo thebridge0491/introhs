@@ -1,0 +1,59 @@
+module NewCase (spec) where
+
+import qualified System.Exit as Exit
+import qualified System.IO as IO
+import qualified Text.Printf as Printf
+import qualified Control.Exception as Exception
+
+import Test.Hspec
+import Test.HUnit
+
+inEpsilon tolerance a b =
+    --(a - delta) <= b && (a + delta) >= b
+    not ((a + delta) < b) && not ((b + delta) < a)
+  where delta = abs tolerance
+
+withFixture1 nm f = Exception.bracket setUp (\_ -> f) tearDown
+  where
+    setUp = Printf.hPrintf IO.stderr "(%s) SetUp ...\n" (nm :: String)
+    tearDown _ = Printf.hPrintf IO.stderr "... TearDown (%s)\n" (nm :: String)
+
+epsilon = 0.001
+--(lst, revlst) = ([0..4], reverse (enumFromTo 0 4))
+
+spec :: Spec
+spec = do
+  --around_ (withFixture1 "NewCase") $ describe "NewCase" $ do
+  describe "NewCase" $ do
+    around_ (withFixture1 "case00") $ context "when case00" $ do
+      it "can equate multiplication" $ do
+        4 @=? (2 * 2)
+    
+    context "when case0" $ do
+      it "can equate multiplication w/ msg" $ do
+        4 == (2 * 2) @? "for 4"
+    
+    context "when case1" $ do
+      it "can assert equality for multiplication" $ do
+        assertEqual "for 4" 4 (2 * 2)
+    
+    context "when caseStr" $ do
+      it "can assert equality for strings" $ do
+        assertEqual "for String 'Hello'" "Hello" "Hello"
+    
+    context "when caseDbl" $ do
+      it "can assert equality for doubles" $ do
+        assertBool "for Double 0.0" $ inEpsilon (epsilon * 0.0) 0.0 0.0
+        assertBool "for Double 4.0" $ inEpsilon (epsilon * 4.0) 4.0 4.0001
+    
+    context "when caseBad" $ do
+      it "can assert bool" $ do
+        assertBool "for Bool" (4 > 5)
+    
+    context "when caseFail" $ do
+      it "can fail" $ do
+        ( assertFailure "for Failure" ) `shouldThrow` (== Exit.ExitFailure 1)
+    
+    context "when caseException" $ do
+      it "can throw exception" $ do
+        ( assertEqual "for Exception" 1 (1 / 0) ) `shouldThrow` anyException

@@ -1,0 +1,74 @@
+{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}{{joiner}}{{^joiner}}.{{/joiner}}{{projectcap}}{{^projectcap}}Util{{/projectcap}}
+===========================================
+.. .rst to .html: rst2html5 foo.rst > foo.html
+..                pandoc -s -f rst -t html5 -o foo.html foo.rst
+
+{{description}}{{^description}}Utilities sub-package for Haskell Intro examples project.{{/description}}
+
+Installation
+------------
+source code tarball download:
+    
+        # [aria2c --check-certificate=false | wget --no-check-certificate | curl -kOL]
+        
+        FETCHCMD='aria2c --check-certificate=false'
+        
+        $FETCHCMD https://{{repohost}}{{^repohost}}bitbucket.org{{/repohost}}/{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}/{{parent}}{{^parent}}introhs{{/parent}}/[get | archive]/master.zip
+
+version control repository clone:
+        
+        git clone https://{{repohost}}{{^repohost}}bitbucket.org{{/repohost}}/{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}/{{parent}}{{^parent}}introhs{{/parent}}.git
+
+build example with make:
+cd <path> ; cabal configure --package-db=dist/package.conf.inplace
+
+make build [test]
+
+cabal install {{name}}{{^name}}introhs-util{{/name}}
+
+build example with cabal:
+cd <path> ; cabal configure ; cabal sandbox init
+
+cabal build {{name}}{{^name}}introhs-util{{/name}} [; cabal test {{name}}{{^name}}introhs-util{{/name}}]
+
+cabal --require-sandbox install {{name}}{{^name}}introhs-util{{/name}}
+
+build example with stack:
+cd <path>
+
+stack build {{name}}{{^name}}introhs-util{{/name}} [; stack test {{name}}{{^name}}introhs-util{{/name}}]
+
+stack install {{name}}{{^name}}introhs-util{{/name}}
+
+Usage
+-----
+{{#executable}}
+        [env RSRC_PATH=<path>/resources] [[stack | cabal] exec | dist/build/]Main-{{name}}{{^name}}introhs-util{{/name}} [-h]
+
+or
+
+        [env RSRC_PATH=<path>/resources] sh src/{{category}}{{^category}}Data{{/category}}/{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}/Main.hs
+
+or
+
+        ghci -i -isrc src/{{category}}{{^category}}Data{{/category}}/{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}/Main.hs
+
+        > :main
+{{/executable}}
+{{^executable}}
+        // PKG_CONFIG='pkg-config --with-path=$PREFIX/lib/pkgconfig'
+        
+        // $PKG_CONFIG --cflags --libs <ffi-lib>
+
+        [LD_LIBRARY_PATH=$PREFIX/lib] ghci -isrc src/{{category}}{{^category}}Data{{/category}}/{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}/{{projectcap}}{{^projectcap}}Util{{/projectcap}}.hs
+        
+        > cartesianProd [0, 1, 2] [10, 20, 30]
+{{/executable}}
+
+Author/Copyright
+----------------
+Copyright (c) {{year}}{{^year}}2015{{/year}} by {{author}}{{^author}}{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}{{/author}} <{{email}}{{^email}}{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}-codelab@yahoo.com{{/email}}>
+
+License
+-------
+Licensed under the {{license}}{{^license}}Apache-2.0{{/license}} License. See LICENSE for details.

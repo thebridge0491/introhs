@@ -1,0 +1,100 @@
+# Multi-package project Makefile script.
+.POSIX:
+help:
+
+#MAKE = make # (GNU make variants: make (Linux) gmake (FreeBSD)
+
+parent = {{parent}}{{^parent}}introhs{{/parent}}
+version = 0.1.0
+SUBDIRS = common app
+
+.PHONY: configure build testCompile help test clean clobber uninstall uninstall-user install install-user
+help: ## help
+	@echo "Usage: $(MAKE) [SUBDIRS="$(SUBDIRS)"] [target] -- some valid targets:"
+#	-@for fileX in $(MAKEFILE_LIST) `if [ -z "$(MAKEFILE_LIST)" ] ; then echo Makefile ; fi` ; do \
+#		grep -ve '^[A-Z]' $$fileX | awk '/^[^.%][-A-Za-z0-9_]+[ ]*:.*$$/ { print "...", substr($$1, 1, length($$1)) }' | sort ; \
+#	done
+	-@for fileX in $(MAKEFILE_LIST) `if [ -z "$(MAKEFILE_LIST)" ] ; then echo Makefile ; fi` ; do \
+		grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $$fileX | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "%-25s%s\n", $$1, $$2}' ; \
+	done
+configure: $(SUBDIRS) ## configure cabal [ARGS=""]
+	-cabal sandbox init
+	-for dirX in $^ ; do \
+		(cd $$dirX ; cabal configure -v $(ARGS) ; cabal sandbox init --sandbox=$$OLDPWD/.cabal-sandbox ; cabal --require-sandbox install --only-dependencies) ; \
+	done
+build: $(SUBDIRS) ## compile [ARGS=""]
+	-for dirX in $^ ; do (cd $$dirX ; cabal $@ $(ARGS)) ; done
+testCompile: $(SUBDIRS) ## compile test(s)
+	-for dirX in $^ ; do \
+		(cd $$dirX ; cabal configure --enable-tests ; cabal build) ; done
+test: $(SUBDIRS) ## run test(s) [TOPTS=""]
+	-for dirX in $^ ; do \
+		(cd $$dirX ; cabal $@ --show-details=always $(TOPTS)) ; done
+clean: $(SUBDIRS) ## clean build artifacts {ARGS=""]
+	-for dirX in $^ ; do (cd $$dirX ; cabal $@ $(ARGS)) ; done
+clobber: $(SUBDIRS) ## clobber build artifacts
+	-for dirX in $^ ; do (cd $$dirX ; $(MAKE) -f Makefile-aux.mk clobber) ; done
+	-rm -fr core* *~ .*~ *.log .coverage *.gcno *.gcda
+uninstall install: $(SUBDIRS) ## [un]install to cabal sandbox package db
+	-for dirX in $^ ; do \
+		proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' $$dirX/*.cabal` ; \
+		if [ "uninstall" = "$@" ] ; then \
+			(cd $$dirX ; cabal sandbox hc-pkg -- unregister $$proj) ; \
+		else (cd $$dirX ; cabal install) ; fi \
+	done
+	-cabal sandbox hc-pkg -- list
+uninstall-user install-user: $(SUBDIRS) ## [un]install to user HOME ghc package db
+	-for dirX in $^ ; do (cd $$dirX ; $(MAKE) -f Makefile-aux.mk $@) ; done
+
+#----------------------------------------
+FMTS ?= tar.gz
+distdir = $(parent)-$(version)
+
+.PHONY: dist sdist doc haddock lint hlint report run debug valgrind
+dist: $(SUBDIRS) ## [FMTS="tar.gz"] archive source code
+	-@mkdir -p build/$(distdir) ; cp -f exclude.lst build/
+#	#-zip -9 -q --exclude @exclude.lst -r - . | unzip -od build/$(distdir) -
+	-tar --format=posix --dereference --exclude-from=exclude.lst -cf - . | tar -xpf - -C build/$(distdir)
+	
+	-@for fmt in `echo $(FMTS) | tr ',' ' '` ; do \
+		case $$fmt in \
+			zip) echo "### build/$(distdir).zip ###" ; \
+				rm -f build/$(distdir).zip ; \
+				(cd build ; zip -9 -q -r $(distdir).zip $(distdir)) ;; \
+			*) tarext=`echo $$fmt | grep -e '^tar$$' -e '^tar.xz$$' -e '^tar.bz2$$' || echo tar.gz` ; \
+				echo "### build/$(distdir).$$tarext ###" ; \
+				rm -f build/$(distdir).$$tarext ; \
+				(cd build ; tar --posix -L -caf $(distdir).$$tarext $(distdir)) ;; \
+		esac \
+	done
+	-@rm -r build/$(distdir)
+	-for dirX in $^ ; do (cd $$dirX ; $(MAKE) -f Makefile-aux.mk $@) ; done
+sdist: $(SUBDIRS) ## create source code distribution(s)
+	-for dirX in $^ ; do (cd $$dirX ; cabal $@ $(ARGS)) ; done
+doc haddock: $(SUBDIRS) ## generate documentation [ARGS=""]
+	-for dirX in $^ ; do (cd $$dirX ; cabal haddock $(ARGS)) ; done
+lint hlint: $(SUBDIRS) ## lint check [ARGS=""]
+	-for dirX in $^ ; do \
+		(cd $$dirX ; cabal exec hlint -- src --report=dist/lint_rpt.html $(ARGS)) ; \
+	done
+report: $(SUBDIRS) ## run test(s) & report code coverage [TOPTS=""]
+#	-for dirX in $^ ; do \
+#		proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' $$dirX/*.cabal` ; \
+#		(cd $$dirX ; cabal exec hpc -- report --verbosity=2 --per-module --decl-list --hpcdir=dist/hpc/vanilla/mix --hpcdir=dist/hpc/vanilla/mix/$$proj-$$version --hpcdir=dist/hpc/vanilla/mix/TsMain-$$proj $(ARGS) `find . -name '*.tix'` | tee dist/cov/cov_rpt.txt) ; \
+#	done
+	-for dirX in $^ ; do \
+		(cd $$dirX ; cabal configure --enable-coverage --enable-tests --flags='debug' ; cabal test $(TOPTS)) ; \
+	done
+
+
+DEBUGGER = cabal exec ddd -- --gdb	# lldb ; ddd --gdb; gdb
+# valgrind tools: memcheck helgrind cachegrind massif lackey
+VALGRIND = cabal exec valgrind -- --verbose --tool=memcheck
+
+run: app ## run main app [ARGS=""]
+	-(cd app ; proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' *.cabal` ; cabal run Main-$$proj -- $(ARGS))
+debug: app ## debug main app [ARGS=""]
+	-(cd app ; proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' *.cabal` ; $(DEBUGGER) dist/build/Main-$$proj/Main-$$proj -- $(ARGS))
+valgrind: app ## valgrind main app
+	-(cd app ; proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' *.cabal` ; $(VALGRIND) dist/build/Main-$$proj/Main-$$proj)

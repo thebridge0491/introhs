@@ -1,0 +1,47 @@
+module ClassicCase (spec) where
+
+import qualified System.Exit as Exit
+import qualified System.IO as IO
+import qualified Text.Printf as Printf
+import qualified Control.Exception as Exception
+
+import Test.Hspec
+import Test.HUnit
+
+import {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Classic
+
+inEpsilon tolerance a b =
+    --(a - delta) <= b && (a + delta) >= b
+    not ((a + delta) < b) && not ((b + delta) < a)
+  where delta = abs tolerance
+
+withFixture1 :: String -> IO a -> IO ()
+withFixture1 nm f = Exception.bracket setUp (\_ -> f) tearDown
+  where
+    setUp = Printf.hPrintf IO.stderr "(%s) SetUp ...\n" nm
+    tearDown _ = Printf.hPrintf IO.stderr "... TearDown (%s)\n" nm
+
+epsilon = 0.001
+--(lst, revlst) = ([0..4], reverse (enumFromTo 0 4))
+
+spec :: Spec
+spec = do
+  --around_ (withFixture1 "ClassicCase") $ describe "ClassicCase" $ do
+  describe "ClassicCase" $ do
+    around_ (withFixture1 "caseFact") $ context "when caseFact" $ do
+      it "can compute factorial" $ mapM_ (\n -> do
+        let ans = foldl (*) 1 [1..n]
+        mapM_ (\(funcA, nm) -> 
+            -- assertEqual nm (product [1..n]) (funcA n)
+            assertEqual nm ans (funcA n)
+            ) [(factLp, "factLp"), (factI, "factI")]
+        ) [0, 9, 18]
+    
+    context "when caseExpt" $ do
+      it "can compute exponent" $ mapM_ (\(b, n) -> do
+        let ans = b ** n
+        mapM_ (\(funcA, nm) -> 
+            --assertEqual nm (b ** n) (funcA b n)
+            assertBool nm (inEpsilon (epsilon * ans) ans (funcA b n))
+            ) [(exptLp, "exptLp"), (exptI, "exptI")]
+        ) [(x, y) | x <- [2.0, 11.0, 20.0], y <- [3.0, 6.0, 10.0], True]

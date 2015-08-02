@@ -1,0 +1,157 @@
+.POSIX:
+.SUFFIXES:
+PREFIX = /usr/local
+VPATH = .
+
+DEBUG = 0
+
+# Single package Makefile script.
+.SUFFIXES: .s .o .a .dyn_o .hs
+help:
+
+PKG_CONFIG = pkg-config --with-path=$(PREFIX)/lib/pkgconfig
+
+proj = $(shell sed -ne 's|^name:[ ]*\(.*\)|\1|p' *.cabal)
+version = $(shell sed -ne 's|^version:[ ]*\(.*\)|\1|p' *.cabal)
+pkg_id := $(shell basename `grep '^Libraries installed in:' -A1 dist/cabal.conf | tail -n1`)
+#ver_major = $(shell echo $(version) | cut -d'.' -f1)
+pkgdb_inplace = dist/package.conf.inplace
+cabal_cfg_opts = --package-db=$(pkgdb_inplace)
+
+HSC = ghc # -v
+GHC_PKG = ghc-pkg # -v
+ghc_ver = $(shell $(GHC_PKG) --simple-output field ghc version)
+lang_options = -XHaskell2010 -XOverloadedStrings -XFlexibleContexts
+outputdir = dist/build
+outputdir_test = $(outputdir)/TsMain-$(proj)/TsMain-$(proj)-tmp
+
+
+CPPFLAGS := $(CPPFLAGS) -I$(outputdir) -I$(outputdir)/autogen
+ARFLAGS = rvcs
+HSLDFLAGS := $(HSLDFLAGS) -optl-Wl,-rpath,'$$ORIGIN/' -threaded
+HSCFLAGS := $(HSCFLAGS) -Wall -fno-warn-type-defaults
+
+ifeq ($(shell sh -c 'uname -s 2>/dev/null || echo not'),Darwin)
+shlibext = dylib
+else
+shlibext = so
+HSLDFLAGS := $(HSLDFLAGS) -optl-Wl,--enable-new-dtags
+endif
+
+ifneq ($(DEBUG),0)
+HSLDFLAGS := $(HSLDFLAGS) -fhpc
+HSCFLAGS := $(HSCFLAGS) -g -O0 -fhpc
+#cabal_cfg_opts := $(cabal_cfg_opts) --flags='debug' --ghc-pkg-options='-v'
+cabal_cfg_opts := $(cabal_cfg_opts) --flags='debug'
+else
+CPPFLAGS := $(CPPFLAGS) -DNDEBUG -UDEBUG
+HSCFLAGS := $(HSCFLAGS) -O2
+cabal_cfg_opts := $(cabal_cfg_opts) --flags='-debug'
+endif
+
+depns = base hslogger ConfigFile regex-posix{{#executable}} regex-compat mtl text bytestring unordered-containers random aeson json yaml{{/executable}}
+
+redirect_opts = -dynosuf dyn_o -dynhisuf dyn_hi -outputdir $(outputdir) \
+	-odir $(outputdir) -hidir $(outputdir) -stubdir $(outputdir) \
+	-hpcdir $(outputdir) -dumpdir $(outputdir)
+
+ldlibs_hs = -fno-warn-missing-signatures
+{{#executable}}
+src_hs = $(shell ls src/*/*/*.hs src/*.hs | grep -ve Main.hs) $(shell ls src/*/*/Main.hs src/Main.hs)
+#objs_hs = $(shell echo $(src_hs:.hs=.o) | sed "s|src|$(outputdir)|g")
+#objs_dyn_hs = $(shell echo $(src_hs:.hs=.dyn_o) | sed "s|src|$(outputdir)|g")
+{{/executable}}
+{{^executable}}
+src_hs = $(shell ls src/*/*/*.hs src/*.hs)
+objs_hs = $(shell echo $(src_hs:.hs=.o) | sed "s|src|$(outputdir)|g")
+objs_dyn_hs = $(shell echo $(src_hs:.hs=.dyn_o) | sed "s|src|$(outputdir)|g")
+{{/executable}}
+
+#depns_test = ... $(proj)
+depns_test = test-framework test-framework-hunit test-framework-quickcheck2
+#depns_test = tasty tasty-hunit tasty-quickcheck
+#depns_test = hspec hspec-discover hspec-expectations
+
+redirect_test_opts = -dynosuf dyn_o -dynhisuf dyn_hi \
+	-outputdir $(outputdir_test) -odir $(outputdir_test) \
+	-hidir $(outputdir_test) -stubdir $(outputdir_test) \
+	-hpcdir $(outputdir_test) -dumpdir $(outputdir_test)
+
+ldlibs_test_hs = -fno-warn-missing-signatures
+#tests_hs = $(patsubst ../%,%,$(wildcard tests/**/*.hs tests/*.hs))
+tests_hs = $(shell ls tests/**/*.hs tests/*.hs)
+
+depend $(outputdir)/.depend:
+	-@mkdir -p $(outputdir) $(outputdir_test)
+	-@echo '' > $(outputdir)/.depend ; echo '' > $(outputdir)/.depend_test
+	-@$(HSC) $(CPPFLAGS) $(HSCFLAGS) -M -dynamic-too -dep-suffix dyn_ \
+		-dep-suffix '' $(redirect_opts) -ddump-hi -ddump-to-file \
+		-dep-makefile $(outputdir)/.depend `find src -name '*.hs'`
+	-@$(HSC) $(CPPFLAGS) $(HSCFLAGS) -M -dynamic-too -dep-suffix dyn_ \
+		-dep-suffix '' $(redirect_test_opts) -itests:$(outputdir_test) \
+		-ddump-hi -ddump-to-file -dep-makefile $(outputdir)/.depend_test \
+		`find tests -name '*.hs'`
+
+{{#executable}}
+#$(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) : $(objs_dyn_hs)
+
+$(outputdir)/Main-$(proj)/Main-$(proj) : $(src_hs)
+	-@mkdir -p $(outputdir)/Main-$(proj)
+	depns_pkgids="`for pkgX in $(depns) ; do echo -n -package-id= ; $(GHC_PKG) --global --user --simple-output field $$pkgX id | head -n1 ; done`" ; \
+	$(LINK.hs) $(lang_options) '-dynload sysdep' $(redirect_opts) \
+		-rtsopts -with-rtsopts=-N $$depns_pkgids $^ -o $@ $(ldlibs_hs)
+{{/executable}}
+{{^executable}}
+$(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) : $(objs_dyn_hs)
+{{/executable}}
+
+$(outputdir)/TsMain-$(proj)/TsMain-$(proj) : $(tests_hs)
+	depns_pkgids_test="`for pkgX in $(depns_test) ; do echo -n -package-id= ; $(GHC_PKG) --global --user --simple-output field $$pkgX id | head -n1 ; done`" ; \
+	$(LINK.hs) $(lang_options) '-dynload sysdep' $(redirect_test_opts) \
+		-rtsopts -with-rtsopts=-N $$depns_pkgids_test $^ -o $@ \
+		$(ldlibs_test_hs)
+
+.PHONY: configure depend all build testCompile{{#executable}} run debug valgrind{{/executable}}
+
+configure: ## configure cabal [ARGS""]
+	-mkdir -p dist ; $(GHC_PKG) -v init $(pkgdb_inplace)
+	-cabal configure -v $(cabal_cfg_opts) $(ARGS) > dist/cabal.conf
+
+{{#executable}}
+#all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/libHS$(pkg_id).a($(objs_hs)) $(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) ## compile
+all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/Main-$(proj)/Main-$(proj) ## compile
+{{/executable}}
+{{^executable}}
+all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/libHS$(pkg_id).a($(objs_hs)) $(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) ## compile
+{{/executable}}
+testCompile: $(outputdir)/TsMain-$(proj)/TsMain-$(proj) ## compile test
+
+LINK.ohs = $(HSC) $(HSLDFLAGS)
+LINK.hs = $(LINK.ohs) $(CPPFLAGS) $(HSCFLAGS)
+
+.hs.o .hs.dyn_o : 
+	depns_pkgids="`for pkgX in $(depns) ; do echo -n -package-id= ; $(GHC_PKG) --global --user --simple-output field $$pkgX id | head -n1 ; done`" ; \
+	$(HSC) -c $(HSCFLAGS) $(lang_options) -dynamic-too $(redirect_opts) \
+		-i -i$(outputdir):$(outputdir)/autogen:src:tests $(CPPFLAGS) \
+		-this-package-key $(pkg_id) -no-user-package-db $$depns_pkgids \
+		-ddump-hi -ddump-to-file $<
+{{#executable}}
+
+LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(outputdir)
+export LD_LIBRARY_PATH
+
+DEBUGGER = ddd --gdb	# lldb ; ddd --gdb ; gdb
+# valgrind tools: memcheck helgrind cachegrind massif lackey
+VALGRIND = valgrind --verbose --tool=memcheck
+
+run: $(outputdir)/Main-$(proj)/Main-$(proj) ## run main [ARGS=""]
+#	export [DY]LD_LIBRARY_PATH=. # ([da|ba|z]sh Linux)
+#	setenv [DY]LD_LIBRARY_PATH . # (tcsh FreeBSD)
+	-$< $(ARGS)
+debug: $(outputdir)/Main-$(proj)/Main-$(proj) ## debug main [ARGS=""]
+	-$(DEBUGGER) $< $(ARGS)
+valgrind: $(outputdir)/Main-$(proj)/Main-$(proj) ## valgrind main
+	-$(VALGRIND) $<
+{{/executable}}
+-include $(outputdir)/.depend $(outputdir)/.depend_test Makefile-targets.mk
+#-include Makefile-auxffi.mk

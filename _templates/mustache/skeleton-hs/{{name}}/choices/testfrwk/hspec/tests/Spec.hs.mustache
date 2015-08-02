@@ -1,0 +1,30 @@
+#!/bin/sh
+{-
+EXTRA_PKGDB=`find $HOME/.stack/snapshots -type f -name package.cache -exec dirname {} \;`
+DEPNS_PKGIDS=`for pkg in base hspec hslogger ConfigFile regex-posix ; do echo -n -package-id= ; ghc-pkg --global --user --package-db=$EXTRA_PKGDB --simple-output field $pkg id | head -n1 ; done`
+
+#exec ghci -v1 -Wall -fno-warn-type-defaults -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N -i -isrc:tests -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS{{#ffilib}} -lintro_c-practice{{/ffilib}} $0
+exec runhaskell -v1 -Wall -fno-warn-type-defaults -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N -i -isrc:tests -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS{{#ffilib}} -lintro_c-practice{{/ffilib}} $0 $@
+-}
+-- #!/usr/bin/env runhaskell
+
+{-# OPTIONS_GHC -F -pgmF hspec-discover #-}
+
+{-
+import Test.Hspec
+
+import qualified NewCase
+import qualified NewProp
+--import qualified ClassicCase
+--import qualified ClassicProp
+
+main :: IO ()
+main = hspec spec
+
+spec :: Spec
+spec = do
+    describe "NewCase" NewCase.spec
+    describe "NewProp" NewProp.spec
+    --describe "ClassicCase" ClassicCase.spec
+    --describe "ClassicProp" ClassicProp.spec
+-}

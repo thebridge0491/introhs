@@ -1,0 +1,10 @@
+module {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Person (module {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Person) where
+
+data Person = Person String Int
+    deriving (Eq, Show)
+
+personName :: Person -> String
+personName (Person name _) = name
+
+personAge :: Person -> Int
+personAge (Person _ age) = age

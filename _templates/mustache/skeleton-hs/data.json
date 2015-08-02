@@ -1,0 +1,36 @@
+{
+  "groupid": false,
+  "category": "Data",
+  "parent": "introhs",
+  "parentdescription": "Multi-package project Intro examples for Haskell.",
+  "project": "util",
+  "description": "Utilites sub-package for Haskell Intro examples project.",
+  "version": "0.1.0",
+  "separator": "-",
+  "joiner": ".",
+  "parentregex": "^[a-z][-a-z0-9]+$",
+  "projectregex": "^[a-z][a-z0-9]+$",
+  
+  "repohost": "bitbucket.org",
+  "repoacct": "imcomputer",
+  "date": "2015-08-01",
+  
+  "readmeext": ".rst",
+  "license": "Apache-2.0",
+  "buildtool": "stack",
+  "testfrwk": "test-framework",
+  
+  "ffilib": false,
+  
+  "skeletondir": "Templates/mustache/skeleton-hs",
+  
+  "_choices": {
+    "readmeext": [".rst", ".md", ".adoc"],
+    "license": ["Apache-2.0", "MIT", "BSD-3-Clause", "GPL-3.0+", "ISC", 
+      "Unlicense", "Not open source"],
+    "buildtool": ["stack", "cabal", "make"],
+    "testfrwk": ["test-framework", "hspec", "tasty"],
+    "executable": [false, "yes"],
+    "ffilib": [false, "foreign"]
+  }
+}

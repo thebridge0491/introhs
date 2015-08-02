@@ -1,0 +1,205 @@
+#!/bin/sh
+{-
+EXTRA_PKGDB=`find $HOME/.stack/snapshots -type f -name package.cache -exec dirname {} \;`
+DEPNS_PKGIDS=`for pkg in base hslogger ConfigFile regex-compat random aeson json yaml ; do echo -n -package-id= ; ghc-pkg --global --user --package-db=$EXTRA_PKGDB --simple-output field $pkg id | head -n1 ; done`
+
+#exec ghci -v1 -Wall -rtsopts -with-rtsopts=-N -i -isrc -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS $0
+exec runhaskell -v1 -Wall -rtsopts -with-rtsopts=-N -i -isrc -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS $0 $@
+-}
+-- #!/usr/bin/env runhaskell
+
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, ScopedTypeVariables #-}
+
+module Main (main) where
+
+import qualified System.Environment as Environment
+import qualified System.Exit as Exit
+import qualified System.IO as IO
+import qualified Data.Maybe as Maybe
+
+import qualified System.Log as Log
+import qualified System.Log.Handler as Handler
+import qualified System.Log.Logger as Logger
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Writer as Writer
+
+import qualified System.Console.GetOpt as GetOpt
+import qualified Control.Exception as Exception
+
+import qualified Text.Regex as Regex
+--import qualified Text.Regex.Posix as RegexP
+
+import qualified Data.ConfigFile as ConfigFile
+import qualified Data.Text as Text
+import qualified Data.ByteString.Char8 as BChar8
+import qualified Data.ByteString.Lazy.Char8 as BLChar8
+import qualified Data.HashMap.Lazy as H
+import qualified Data.Aeson as AeJSON
+import qualified Data.Yaml as Yaml
+import qualified Text.JSON as JSON
+
+import qualified Data.Introhs.Intro as Intro
+import qualified Data.Introhs.Person as Person
+
+-- single-line comment
+{- multi-line comment
+    --- run w/out compile ---
+    [sh | runhaskell -i$(pwd)] Main.hs arg1 argN
+    
+    --- run REPL, load script, & run ---
+    ghci -i$(pwd) Main.hs ; :main arg1 argN
+    
+    --- help/info tools in REPL ---
+    :show, :help|:?, :type, :kind, :info, :browse, :trace, :load
+-}
+
+data OptsRecord = OptsRecord {optHelp :: Bool, optUser :: String, 
+        optVerbose :: Int}
+    deriving (Eq, Show)
+
+(logger_root, logger_prac) = (Logger.rootLoggerName, "prac")
+
+defaultOpts :: OptsRecord
+defaultOpts = OptsRecord {optHelp = False, optUser = "World", optVerbose = 1}
+
+runIntro :: String -> IO ()
+runIntro user = do
+    putStrLn $ (if match then "Good match: " else "Does not match: ") ++
+        user ++ " to \"^quit$\""
+  where
+    --match = user RegexP.=~ "^quit$" :: Bool
+    --match = user Intro.=~+ "^quit$" :: Bool
+    (isMatchBOLEOL, isCaseSensitive) = (True, False)
+    pat = Regex.mkRegexWithOpts "^quit$" isMatchBOLEOL isCaseSensitive
+    match = Maybe.isJust $ Regex.matchRegex pat user
+
+
+getConfigIO :: FilePath -> IO ConfigFile.ConfigParser
+getConfigIO confFile = do
+    --ioConfParser <- ConfigFile.readfile ConfigFile.emptyCP confFile
+    --return $ either (const ConfigFile.emptyCP) id ioConfParser
+    e <- Exception.try $ ConfigFile.readfile ConfigFile.emptyCP confFile
+    case e of
+        Left (exc :: Exception.IOException) -> 
+            return ConfigFile.emptyCP
+        Right ioConfParser -> return $ either (const ConfigFile.emptyCP) id ioConfParser
+
+deserializeStr :: String -> String -> AeJSON.Object
+deserializeStr str1 fmt1 = 
+    if "yaml" == fmt1 then
+        Maybe.fromMaybe H.empty (Yaml.decode (BChar8.pack str1) :: 
+            Maybe AeJSON.Object)
+        else
+        Maybe.fromMaybe H.empty (AeJSON.decode (BLChar8.pack str1) :: 
+            Maybe AeJSON.Object)
+
+specList :: [GetOpt.OptDescr (OptsRecord -> OptsRecord)]
+specList =
+    [GetOpt.Option "h" ["help"]
+        (GetOpt.NoArg (\opt -> opt {optHelp = True}))
+        "Display help msg"
+    , GetOpt.Option "v" ["verbose"]
+        (GetOpt.OptArg ((\v opt -> opt {optVerbose = read v :: Int}) .
+            Maybe.fromMaybe "3") "VERBOSE")
+        "Verbosity level (Optional) (default 1)"
+    , GetOpt.Option "u" ["user"]
+        (GetOpt.ReqArg (\arg opt -> opt {optUser = arg}) "USER")
+        "User name"
+    ]
+
+parseCmdOpts :: String -> [String] -> (OptsRecord, [String])
+parseCmdOpts progName argv =
+    case GetOpt.getOpt GetOpt.Permute specList argv of
+        (o, n, []) -> (foldl (flip id) defaultOpts o, n)
+        (_, _, errs) -> error (show errs ++  "\n" ++ header)
+  where header = "Usage: " ++ progName ++ " [-h][OPTION...]"
+
+parseCmdOptsLog :: String -> [String] ->
+    Writer.Writer [(Log.Priority, String)] (OptsRecord, [String])
+parseCmdOptsLog progName argv = do
+    Writer.tell [(Log.INFO, "parseCmdOpts()")]
+    return (parseCmdOpts progName argv)
+
+checkUserHelp :: Bool -> String -> (() -> IO a) -> IO ()
+checkUserHelp isHelp progName exitFunc =
+    Monad.when isHelp $ do 
+        IO.hPutStrLn IO.stderr (GetOpt.usageInfo header specList)
+        _ <- exitFunc ()
+        Exit.exitWith Exit.ExitSuccess
+  where header = "Usage: " ++ progName ++ " [-h][OPTION...]"
+
+{- | Entry point -}
+main :: IO ()
+main = do
+    argv <- Environment.getArgs
+    progName <- Environment.getProgName
+    envRsrcPath <- Environment.lookupEnv "RSRC_PATH"
+    let rsrc_path = Maybe.fromMaybe "resources" envRsrcPath
+    
+    logStream_root <- Intro.logStreamHdlrWithFormat Intro.withFormatter 
+        IO.stderr Logger.DEBUG
+    logFile_root <- Intro.logFileHdlrWithFormat Intro.withFormatter 
+        "root.log" Logger.INFO
+    logFile_prac <- Intro.logFileHdlrWithFormat Intro.withFormatter 
+        "prac.log" Logger.DEBUG
+    Logger.updateGlobalLogger logger_root $ Logger.setLevel Logger.INFO
+    Logger.updateGlobalLogger logger_root $ Logger.setHandlers [logStream_root,
+        logFile_root]
+    Logger.updateGlobalLogger logger_prac $ Logger.setHandlers [logFile_prac]
+    
+    let exitCloseLogs () = mapM_ Handler.close 
+            [logStream_root, logFile_root, logFile_prac]
+    
+    let ((opts, _), log_parseCmdOpts) = Writer.runWriter $ 
+            parseCmdOptsLog progName argv
+    mapM_ (uncurry (Logger.logM logger_root)) log_parseCmdOpts
+    checkUserHelp (optHelp opts) progName exitCloseLogs
+    
+    ini_cfg <- getConfigIO $ rsrc_path ++ "/prac.conf"
+    --jsonstr <- readFile $ rsrc_path ++ "/prac.json"
+    e1 <- Exception.try $ readFile $ rsrc_path ++ "/prac.json"
+    --yamlstr <- readFile $ rsrc_path ++ "/prac.yaml"
+    e2 <- Exception.try $ readFile $ rsrc_path ++ "/prac.yaml"
+    let jsonstr = case e1 of
+            Left (exc :: Exception.IOException) -> 
+                "{\"domain\": \"???\", \"user1\": {\"name\": \"???\"}}"
+            Right str -> str
+    let hmap1 = if True then deserializeStr jsonstr "json"
+                else deserializeStr yamlstr "yaml"
+                  where yamlstr = case e2 of
+                            Left (exc :: Exception.IOException) -> 
+                                "domain: ???\nuser1: \n  name: ???\n"
+                            Right str -> str
+    
+    let jsonobj = JSON.decode jsonstr :: JSON.Result (JSON.JSObject JSON.JSValue)
+    let domain1 = jsonobj >>= (JSON.valFromObj "domain") :: JSON.Result JSON.JSString
+    let user1Name1 = jsonobj >>= (JSON.valFromObj "user1") >>=
+            (JSON.valFromObj "name") :: JSON.Result JSON.JSString
+    
+    let AeJSON.Object user1Lst = H.lookupDefault AeJSON.Null "user1" hmap1
+    let AeJSON.String domain = H.lookupDefault "" "domain" hmap1
+    let AeJSON.String user1Name = H.lookupDefault "" "name" user1Lst
+    
+    let lst = [(Intro.iniCfgToString ini_cfg 
+            , either (const "") id $ ConfigFile.get ini_cfg "default" "domain"
+            , either (const "") id $ ConfigFile.get ini_cfg "user1" "name")
+            , (show $ (\(JSON.Ok alst) -> alst) jsonobj
+            , JSON.fromJSString ((\(JSON.Ok res) -> res) domain1)
+            , JSON.fromJSString ((\(JSON.Ok res) -> res) user1Name1))
+            , (show hmap1, Text.unpack domain, Text.unpack user1Name)
+            ]
+    
+    mapM_ (\(t0, t1, t2) -> do
+        putStr $ "config: {" ++ t0 ++ "}\n"
+        putStr $ "domain: " ++ t1 ++ "\n"
+        putStr $ "user1Name: " ++ t2 ++ "\n\n") lst
+    
+    runIntro (optUser opts)
+    
+    exitCloseLogs ()
+    
+{-
+-- System.Environment.withArgs [arg1, argN] main
+-- :set args arg1 argN
+:main arg1 argN
+-}

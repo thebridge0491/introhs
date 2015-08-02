@@ -1,0 +1,48 @@
+# Multi-package project Makefile script.
+.POSIX:
+help:
+
+#MAKE = make # (GNU make variants: make (Linux) gmake (FreeBSD)
+
+parent = {{parent}}{{^parent}}introhs{{/parent}}
+version = 0.1.0
+SUBDIRS = common app
+
+.PHONY: configure depend all build testCompile help test clean uninstall uninstall-user install install-user
+help: $(SUBDIRS)
+	-for dirX in $^ ; do $(MAKE) -C $$dirX $@ ; done
+	@echo "##### Top-level multiproject: $(parent) #####"
+	@echo "Usage: $(MAKE) [SUBDIRS="$(SUBDIRS)"] [target]"
+configure depend all build testCompile test uninstall uninstall-user install install-user: $(SUBDIRS)
+	-for dirX in $^ ; do $(MAKE) -C $$dirX $@ ; done
+clean: $(SUBDIRS)
+	-for dirX in $^ ; do $(MAKE) -C $$dirX $@ ; done
+	-rm -fr core* *~ .*~ *.log */*.log .coverage */*.gcno */*.gcda */*.tix
+
+#----------------------------------------
+FMTS ?= tar.gz
+distdir = $(parent)-$(version)
+
+.PHONY: dist sdist doc haddock lint hlint report run debug valgrind
+dist: $(SUBDIRS)
+	-@mkdir -p build/$(distdir) ; cp -f exclude.lst build/
+#	#-zip -9 -q --exclude @exclude.lst -r - . | unzip -od build/$(distdir) -
+	-tar --format=posix --dereference --exclude-from=exclude.lst -cf - . | tar -xpf - -C build/$(distdir)
+	
+	-@for fmt in `echo $(FMTS) | tr ',' ' '` ; do \
+		case $$fmt in \
+			zip) echo "### build/$(distdir).zip ###" ; \
+				rm -f build/$(distdir).zip ; \
+				(cd build ; zip -9 -q -r $(distdir).zip $(distdir)) ;; \
+			*) tarext=`echo $$fmt | grep -e '^tar$$' -e '^tar.xz$$' -e '^tar.bz2$$' || echo tar.gz` ; \
+				echo "### build/$(distdir).$$tarext ###" ; \
+				rm -f build/$(distdir).$$tarext ; \
+				(cd build ; tar --posix -L -caf $(distdir).$$tarext $(distdir)) ;; \
+		esac \
+	done
+	-@rm -r build/$(distdir)
+	-for dirX in $^ ; do $(MAKE) -C $$dirX $@ ; done
+sdist doc haddock lint hlint report: $(SUBDIRS)
+	-for dirX in $^ ; do $(MAKE) -C $$dirX $@ ; done
+run debug valgrind: app
+	-$(MAKE) -C app $@

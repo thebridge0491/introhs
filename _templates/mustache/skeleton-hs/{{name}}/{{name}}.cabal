@@ -1,0 +1,100 @@
+name:                {{name}}{{^name}}introhs-util{{/name}}
+version:             {{version}}{{^version}}0.1.0{{/version}}
+synopsis:            {{description}}{{^description}}Utilities sub-package for Haskell Intro examples project.{{/description}}
+description:         Please see README{{readmeext}}{{^readmeext}}.rst{{/readmeext}}
+homepage:            https://{{repohost}}{{^repohost}}bitbucket.org{{/repohost}}/{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}/{{parent}}{{^parent}}introhs{{/parent}}#readme
+license:             {{license}}{{^license}}Apache-2.0{{/license}}
+license-file:        LICENSE
+author:              {{author}}{{^author}}{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}{{/author}}
+maintainer:          {{email}}{{^email}}{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}-codelab@yahoo.com{{/email}}
+copyright:           Copyright: (c) {{year}}{{^year}}2015{{/year}} {{author}}{{^author}}{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}{{/author}}
+category:            {{category}}{{^category}}Data{{/category}}
+build-type:          Simple
+extra-source-files:  stack.yaml.bak,Makefile,*.mk,exclude.lst
+                   , .editorconfig,.hgignore,.gitignore
+data-files:          README{{readmeext}}{{^readmeext}}.rst{{/readmeext}}
+                   , resources/*.txt,resources/*.conf,resources/*.json
+                   , resources/*.yaml,resources/*.toml
+extra-tmp-files:     prac.log,root.log
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://{{repohost}}{{^repohost}}bitbucket.org{{/repohost}}/{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}/{{parent}}{{^parent}}introhs{{/parent}}.git
+
+flag debug
+  description:         Enable debug support
+  default:             False
+flag dynamic
+  description:         Build dynamically-linked
+  default:             True
+
+{{#executable}}
+executable Main-{{name}}{{^name}}introhs-util{{/name}}
+  hs-source-dirs:      src
+  main-is:             {{category}}{{^category}}Data{{/category}}/{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}/Main.hs
+  other-modules:       {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Person,{{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.{{projectcap}}{{^projectcap}}Util{{/projectcap}}
+  --other-modules:       {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Person,{{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.{{projectcap}}{{^projectcap}}Util{{/projectcap}},{{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Classic
+  ghc-options:         -Wall -fno-warn-type-defaults -threaded 
+                       -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N
+  ld-options:          "-Wl,-rpath,$ORIGIN/"
+  if flag(debug)
+    ghc-options:       -g
+    cc-options:        -DDEBUG -UNDEBUG -g3 --coverage
+    ld-options:        --coverage
+  else
+    cc-options:        -DNDEBUG -UDEBUG
+  if flag(dynamic)
+    ghc-options:       -dynamic
+  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-compat,mtl
+                     , regex-posix,text,bytestring,unordered-containers
+                     , random,aeson,json,yaml
+  --extra-lib-dirs:      .
+  --extra-libraries:     :libintro_c-practice.a
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings,FlexibleContexts
+{{/executable}}
+{{^executable}}
+library
+  hs-source-dirs:      src
+  exposed-modules:     {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.{{projectcap}}{{^projectcap}}Util{{/projectcap}}
+  --exposed-modules:     {{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.{{projectcap}}{{^projectcap}}Util{{/projectcap}},{{category}}{{^category}}Data{{/category}}.{{parentcap}}{{^parentcap}}Introhs{{/parentcap}}.Classic
+  ghc-options:         -Wall -fno-warn-type-defaults
+  ld-options:          "-Wl,-rpath,$ORIGIN/"
+  if flag(debug)
+    ghc-options:       -g
+    cc-options:        -DDEBUG -UNDEBUG -g3 --coverage
+    ld-options:        --coverage
+  else
+    cc-options:        -DNDEBUG -UDEBUG
+  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-posix
+  --extra-lib-dirs:      .
+  --extra-libraries:     :libintro_c-practice.a
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings,FlexibleContexts
+{{/executable}}
+
+test-suite TsMain-{{name}}{{^name}}introhs-util{{/name}}
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      tests
+  main-is:             Main.hs
+  --main-is:             Spec.hs
+  other-modules:       NewCase,NewProp
+  --other-modules:       NewCase,NewProp,ClassicCase,ClassicProp
+  ghc-options:         -Wall -fno-warn-type-defaults -threaded 
+                       -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N
+  ld-options:          "-Wl,-rpath,$ORIGIN/"
+  if flag(debug)
+    ghc-options:       -g
+    cc-options:        -DDEBUG -UNDEBUG -g3 --coverage
+    ld-options:        --coverage
+  else
+    cc-options:        -DNDEBUG -UDEBUG
+  if flag(dynamic)
+    ghc-options:       -dynamic
+  build-depends:       base,HUnit,QuickCheck{{^executable}}, {{name}}{{^name}}introhs-util{{/name}}{{/executable}}
+                     , test-framework, test-framework-hunit,test-framework-quickcheck2
+                     --, tasty, tasty-hunit,tasty-quickcheck
+                     --, hspec, hspec-discover,hspec-expectations
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings,FlexibleContexts
