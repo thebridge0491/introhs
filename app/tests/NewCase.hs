@@ -7,10 +7,7 @@ import qualified Control.Exception as Exception
 import Test.Framework.Providers.HUnit
 import Test.HUnit
 
-inEpsilon tolerance a b =
-    --(a - delta) <= b && (a + delta) >= b
-    not ((a + delta) < b) && not ((b + delta) < a)
-  where delta = abs tolerance
+import qualified Data.Introhs.Util as Util
 
 withFixture1 :: String -> IO a -> IO ()
 withFixture1 nm f = Exception.bracket setUp (\_ -> f) tearDown
@@ -25,8 +22,8 @@ epsilon = 0.001
 case1 = withFixture1 "case00" $ assertEqual "for 4" 4 (2 * 2)
 caseStr = assertEqual "for String 'Hello'" "Hello" "Hello"
 caseDbl = do
-    assertBool "for Double 0.0" $ inEpsilon (epsilon * 0.0) 0.0 0.0
-    assertBool "for Double 4.0" $ inEpsilon (epsilon * 4.0) 4.0 4.0001
+    assertBool "for Double 0.0" $ Util.inEpsilon (epsilon * 0.0) 0.0 0.0
+    assertBool "for Double 4.0" $ Util.inEpsilon (epsilon * 4.0) 4.0 4.0001
 caseBad = assertBool "for Bool" (4 > 5)
 caseFail = assertFailure "for Failure"
 caseException = assertEqual "for Exception" 1 (1 / 0)

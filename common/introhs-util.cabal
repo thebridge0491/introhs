@@ -32,7 +32,6 @@ flag dynamic
 library
   hs-source-dirs:      src
   exposed-modules:     Data.Introhs.Util
-  --exposed-modules:     Data.Introhs.Util,Data.Introhs.Classic
   ghc-options:         -Wall -fno-warn-type-defaults
   ld-options:          "-Wl,-rpath,$ORIGIN/"
   if flag(debug)
@@ -42,8 +41,6 @@ library
   else
     cc-options:        -DNDEBUG -UDEBUG
   build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-posix
-  --extra-lib-dirs:      .
-  --extra-libraries:     :libintro_c-practice.a
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
 
@@ -53,7 +50,6 @@ test-suite TsMain-introhs-util
   main-is:             Main.hs
   --main-is:             Spec.hs
   other-modules:       NewCase,NewProp
-  --other-modules:       NewCase,NewProp,ClassicCase,ClassicProp
   ghc-options:         -Wall -fno-warn-type-defaults -threaded 
                        -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N
   ld-options:          "-Wl,-rpath,$ORIGIN/"

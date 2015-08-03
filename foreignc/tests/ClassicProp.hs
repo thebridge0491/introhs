@@ -4,23 +4,21 @@ import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck
 --import Test.QuickCheck.Property as Prop
 
-import Data.Introhs.Classic
+import Data.Word
 
-inEpsilon tolerance a b =
-    --(a - delta) <= b && (a + delta) >= b
-    not ((a + delta) < b) && not ((b + delta) < a)
-  where delta = abs tolerance
+import qualified Data.Introhs.Util as Util
+import Data.Introhs.Classic
 
 epsilon = 0.001
 
 --propFact :: (Eq a, Show a, Ord a, Num a, Enum a) => a -> Bool
-propFact :: Word32 -> Bool
+propFact :: Word64 -> Bool
 propFact n = foldl (\a f -> a && f n == ans) True [factLp, factI]
   where ans = foldl (*) 1 [1..n]
 
 --propExpt :: (Eq a, Show a, Num a) => a -> a -> Bool
 propExpt :: Float -> Float -> Bool
-propExpt b n = foldl (\a f -> a && (inEpsilon (epsilon * ans) ans (f b n))) 
+propExpt b n = foldl (\a f -> a && (Util.inEpsilon (epsilon * ans) ans (f b n))) 
     True [exptLp, exptI]
   where ans = b ** n
     

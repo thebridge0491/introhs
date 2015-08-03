@@ -6,13 +6,14 @@ help:
 
 STACK ?= stack --resolver lts-2.2.0
 
-parent = introhs
-version = 0.1.0
-SUBDIRS = common foreignc api app
+#proj = `$(STACK) query locals | cut -d: -f1 | head -n1`
+#version = `$(STACK) query locals $(proj) version | tr \' '\0'`
+proj = $(shell sed -ne 's|^name:[ ]*\(.*\)|\1|p' *.cabal)
+version = $(shell sed -ne 's|^version:[ ]*\(.*\)|\1|p' *.cabal)
 
 .PHONY: help clobber uninstall-snapshot uninstall-user install-snapshot install-user
 help: ## help
-	@echo "Usage: $(MAKE) -f Makefile-aux.mk [SUBDIRS="$(SUBDIRS)"] [target] -- some valid targets:"
+	@echo "Usage: $(MAKE) -f Makefile-aux.mk [target] -- some valid targets:"
 #	-@for fileX in $(MAKEFILE_LIST) `if [ -z "$(MAKEFILE_LIST)" ] ; then echo Makefile-aux.mk ; fi` ; do \
 #		grep -ve '^[A-Z]' $$fileX | awk '/^[^.%][-A-Za-z0-9_]+[ ]*:.*$$/ { print "...", substr($$1, 1, length($$1)) }' | sort ; \
 #	done
@@ -20,36 +21,27 @@ help: ## help
 		grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $$fileX | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-25s%s\n", $$1, $$2}' ; \
 	done
-clobber: $(SUBDIRS) ## clobber build artifacts
-	-for dirX in $^ ; do (cd $$dirX ; $(MAKE) -f Makefile-aux.mk $@) ; done
+clobber: ## clobber build artifacts
 	-rm -fr core* *~ .*~ *.log .coverage *.gcno *.gcda *.tix
-uninstall-snapshot install-snapshot: $(SUBDIRS) ## [un]install to snapshot-pkg-db
-	-@for dirX in $^ ; do \
-		proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' $$dirX/*.cabal` ; \
-		version=`sed -ne 's|^version:[ ]*\(.*\)|\1|p' $$dirX/*.cabal` ; \
-		if [ "uninstall-snapshot" = "$@" ] ; then \
-			ghc-pkg unregister --package-db=`$(STACK) path --snapshot-pkg-db` $$proj-$$version || true ; \
-		else $(STACK) exec ghc-pkg -- describe $$proj-$$version | \
-				ghc-pkg register --package-db=`$(STACK) path --snapshot-pkg-db` - ; fi \
-	done
+uninstall-snapshot install-snapshot: ## [un]install to snapshot-pkg-db
+	-@if [ "uninstall-snapshot" = "$@" ] ; then \
+		ghc-pkg unregister --package-db=`$(STACK) path --snapshot-pkg-db` $(proj)-$(version) || true ; \
+	else $(STACK) exec ghc-pkg -- describe $(proj)-$(version) | \
+			ghc-pkg register --package-db=`$(STACK) path --snapshot-pkg-db` - ; fi
 	-ghc-pkg list --user --package-db=`$(STACK) path --snapshot-pkg-db`
-uninstall-user install-user: $(SUBDIRS) ## [un]install to user HOME ghc package db
-	-@for dirX in $^ ; do \
-		proj=`sed -ne 's|^name:[ ]*\(.*\)|\1|p' $$dirX/*.cabal` ; \
-		version=`sed -ne 's|^version:[ ]*\(.*\)|\1|p' $$dirX/*.cabal` ; \
-		if [ "uninstall-user" = "$@" ] ; then \
-			ghc-pkg unregister --user $$proj-$$version || true ; \
-		else $(STACK) exec ghc-pkg -- describe $$proj-$$version | \
-				ghc-pkg register --user - ; fi \
-	done
+uninstall-user install-user: ## [un]install to user HOME ghc package db
+	-@if [ "uninstall-user" = "$@" ] ; then \
+		ghc-pkg unregister --user $(proj)-$(version) || true ; \
+	else $(STACK) exec ghc-pkg -- describe $(proj)-$(version) | \
+			ghc-pkg register --user - ; fi
 	-ghc-pkg list --user --package-db=`$(STACK) path --local-pkg-db`
 
 #----------------------------------------
 FMTS ?= tar.gz
-distdir = $(parent)-$(version)
+distdir = $(proj)-$(version)
 
 .PHONY: dist
-dist: $(SUBDIRS)
+dist: ## [FMTS="tar.gz"] archive source code
 	-@mkdir -p build/$(distdir) ; cp -f exclude.lst build/
 #	#-zip -9 -q --exclude @exclude.lst -r - . | unzip -od build/$(distdir) -
 	-tar --format=posix --dereference --exclude-from=exclude.lst -cf - . | tar -xpf - -C build/$(distdir)
@@ -66,4 +58,3 @@ dist: $(SUBDIRS)
 		esac \
 	done
 	-@rm -r build/$(distdir)
-	-for dirX in $^ ; do $(MAKE) -C $$dirX $@ ; done

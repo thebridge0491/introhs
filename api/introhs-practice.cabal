@@ -1,6 +1,6 @@
-name:                introhs-intro
+name:                introhs-practice
 version:             0.1.0
-synopsis:            Main app sub-package for Haskell Intro examples project.
+synopsis:            Practice sub-package for Haskell Intro examples project.
 description:         Please see README.rst
 homepage:            https://bitbucket.org/thebridge0491/introhs#readme
 license:             Apache-2.0
@@ -29,12 +29,11 @@ flag dynamic
   description:         Build dynamically-linked
   default:             True
 
-executable Main-introhs-intro
+library
   hs-source-dirs:      src
-  main-is:             Data/Introhs/Main.hs
-  other-modules:       Data.Introhs.Person,Data.Introhs.Intro
-  ghc-options:         -Wall -fno-warn-type-defaults -threaded 
-                       -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N
+  exposed-modules:     Data.Introhs.Practice.Classic
+                     , Data.Introhs.Practice.Sequenceops
+  ghc-options:         -Wall -fno-warn-type-defaults
   ld-options:          "-Wl,-rpath,$ORIGIN/"
   if flag(debug)
     ghc-options:       -g
@@ -42,21 +41,16 @@ executable Main-introhs-intro
     ld-options:        --coverage
   else
     cc-options:        -DNDEBUG -UDEBUG
-  if flag(dynamic)
-    ghc-options:       -dynamic
-  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-compat,mtl
-                     , time,regex-posix,text,bytestring,unordered-containers
-                     , vector,random,aeson,json,yaml,introhs-util
-                     , introhs-practice
+  build-depends:       base >= 4.7 && < 5,hslogger
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
 
-test-suite TsMain-introhs-intro
+test-suite TsMain-introhs-practice
   type:                exitcode-stdio-1.0
   hs-source-dirs:      tests
   main-is:             Main.hs
   --main-is:             Spec.hs
-  other-modules:       NewCase,NewProp
+  other-modules:       ClassicCase,ClassicProp,SequenceopsCase,SequenceopsProp
   ghc-options:         -Wall -fno-warn-type-defaults -threaded 
                        -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N
   ld-options:          "-Wl,-rpath,$ORIGIN/"
@@ -68,7 +62,7 @@ test-suite TsMain-introhs-intro
     cc-options:        -DNDEBUG -UDEBUG
   if flag(dynamic)
     ghc-options:       -dynamic
-  build-depends:       base,HUnit,QuickCheck, introhs-util
+  build-depends:       base,HUnit,QuickCheck,introhs-util,introhs-practice
                      , test-framework, test-framework-hunit,test-framework-quickcheck2
                      --, tasty, tasty-hunit,tasty-quickcheck
                      --, hspec, hspec-discover,hspec-expectations

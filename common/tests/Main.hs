@@ -14,8 +14,6 @@ import Test.Framework
 
 import qualified NewCase
 import qualified NewProp
---import qualified ClassicCase
---import qualified ClassicProp
 
 {-
 mainWithOpts :: IO ()
@@ -35,7 +33,6 @@ main = defaultMain tests
 
 tests = map (uncurry testGroup) 
     [("NewCase", NewCase.tcases), ("NewProp", NewProp.tprops)
-    --,("ClassicCase", ClassicCase.tcases), ("ClassicProp", ClassicProp.tprops)
     ]
 
 {-

@@ -6,7 +6,7 @@ import Test.QuickCheck
 --import Test.QuickCheck.Property as Prop
 import Data.List
 
-uncurry3 f3 (x, y, z) = f3 x y z
+import qualified Data.Introhs.Util as Util
 
 -- Data.Functor.<$> ; GHC.Base.<*>   -- prefix fmap --> infix <$>
 genTup2 :: Gen a -> Gen a -> Gen (a, a)
@@ -49,7 +49,7 @@ genTup2Int = genTup2 (elements [0..10]) (elements [(-18)..(-1)])
 genTup3Int = genTup3 genC genC genC
 
 propComb1 = (within 100) . forAll genTup2Int . uncurry
-propComb2 = forAll genTup3Int . uncurry3
+propComb2 = forAll genTup3Int . Util.uncurry3
 propComb3 = forAll (listOf1 $ elements [' '..'~'])
 
 

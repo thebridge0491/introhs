@@ -7,12 +7,8 @@ import qualified Control.Exception as Exception
 import Test.Framework.Providers.HUnit
 import Test.HUnit
 
-import Data.Introhs.Classic
-
-inEpsilon tolerance a b =
-    --(a - delta) <= b && (a + delta) >= b
-    not ((a + delta) < b) && not ((b + delta) < a)
-  where delta = abs tolerance
+import qualified Data.Introhs.Util as Util
+import Data.Introhs.Practice.Classic
 
 withFixture1 :: String -> IO a -> IO ()
 withFixture1 nm f = Exception.bracket setUp (\_ -> f) tearDown
@@ -28,15 +24,15 @@ caseFact = withFixture1 "caseFact" $ mapM_ (\n -> do
     mapM_ (\(funcA, nm) -> 
         -- assertEqual nm (product [1..n]) (funcA n)
         assertEqual nm ans (funcA n)
-        ) [(factLp, "factLp"), (factI, "factI")]
+        ) [(factR, "factR"), (factI, "factI")]
     ) [0, 9, 18]
 
 caseExpt = mapM_ (\(b, n) -> do
     let ans = b ** n
     mapM_ (\(funcA, nm) -> 
         --assertEqual nm (b ** n) (funcA b n)
-        assertBool nm (inEpsilon (epsilon * ans) ans (funcA b n))
-        ) [(exptLp, "exptLp"), (exptI, "exptI")]
+        assertBool nm (Util.inEpsilon (epsilon * ans) ans (funcA b n))
+        ) [(exptR, "exptR"), (exptI, "exptI")]
     ) [(x, y) | x <- [2.0, 11.0, 20.0], y <- [3.0, 6.0, 10.0], True]
 
 
