@@ -56,7 +56,7 @@ test-suite TsMain-introhs-intro
   hs-source-dirs:      tests
   main-is:             Main.hs
   --main-is:             Spec.hs
-  other-modules:       NewCase,NewProp
+  other-modules:       CollectionsCase,CollectionsProp
   ghc-options:         -Wall -fno-warn-type-defaults -threaded 
                        -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N
   ld-options:          "-Wl,-rpath,$ORIGIN/"
@@ -72,5 +72,7 @@ test-suite TsMain-introhs-intro
                      , test-framework, test-framework-hunit,test-framework-quickcheck2
                      --, tasty, tasty-hunit,tasty-quickcheck
                      --, hspec, hspec-discover,hspec-expectations
+                     , vector,array,dequeue,abstract-deque,pqueue,containers
+                     , unordered-containers 
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts

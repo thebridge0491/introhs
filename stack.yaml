@@ -10,7 +10,7 @@ packages:
 - 'api'
 - 'app'
 
-extra-deps: [ConfigFile-1.1.4]
+extra-deps: [ConfigFile-1.1.4, dequeue-0.1.12]
 # flags: {}
 # extra-package-dbs: []
 
