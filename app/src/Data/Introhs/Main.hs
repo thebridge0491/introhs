@@ -94,6 +94,8 @@ runIntro rsrc_path opts = do
     dt1 <- Time.Local.getZonedTime
     let dateStr = Time.Format.formatTime Time.defaultTimeLocale "%c" dt1
     rndGen <- Random.newStdGen
+    let queensNdx = fst $ Random.randomR ((0, length answer) :: (Int, Int))
+            rndGen
     
     Exception.assert (numVal == V.length numVec * numVec V.! 0)
         (putStr "")
@@ -129,10 +131,26 @@ runIntro rsrc_path opts = do
             show $ sortBy (flip compare) $ [9, 9, 9, 9] ++ lst
         else do
             printf "fact %d: %d\n" num1 $ Classic.factI num1
-            printf "findIndex 0 <lambda> %s: %d\n" (show lst) $ 
-                Maybe.fromMaybe (-1) $ Sequenceops.findIndexI 0 (== 3) lst
+            printf "findIndex <lambda> %s: %d\n" (show lst) $ 
+                Maybe.fromMaybe (-1) $ Sequenceops.findIndexI (== 3) lst
             printf "append %s %s: %s\n" (show [9, 9, 9, 9]) (show lst) $ 
                 show $ [9, 9, 9, 9] ++ lst
+
+    putStrLn $ replicate 40 '#'
+    printf "pascaltri 5: %s\n" $ show $ Classic.pascaltriAdd 5
+    putStr $ Util.mkStringNested (""," ","\n") show $ Classic.pascaltriAdd 5
+    printf "hanoiMoves (1, 2, 3) 4: %s\n" $ show $
+        case (Classic.hanoiMoves (1,2,3) 4) of (res, _, _) -> res
+    printf "%s\n" $ Util.mkStringInit ("\n", "\n", "\n")
+        (\(moves, pegs) -> "(" ++ moves ++ ", " ++ (show pegs) ++ ")") $
+        case (Classic.hanoiMoves (1,2,3) 4) of (_, _, mov) -> mov
+    printf "nqueens 8 !! %d: %s\n" queensNdx $ show $ 
+        answer !! queensNdx
+    --putStrLn $ unlines $ Classic.nqueensGrid 8 $ answer !! queensNdx
+    --putStrLn $ Util.mkStringInit ("\n", "\n", "\n") (Util.mkString (\el -> 
+    --    show el)) $ Classic.nqueensGrid 8 $ answer !! queensNdx
+    putStr $ Util.mkStringInit ("\n","\n","\n") (\l -> concat $ 
+        intersperse "-" l) $ Classic.nqueensGrid 8 $ answer !! queensNdx
 
     putStrLn $ replicate 40 '#'
     printf "Person.personAge person1: %d\n" $ Person.personAge person1
@@ -151,6 +169,7 @@ runIntro rsrc_path opts = do
     pat = Regex.mkRegexWithOpts "^quit$" isMatchBOLEOL isCaseSensitive
     match = Maybe.isJust $ Regex.matchRegex pat (optUser opts)
     person2 = Person.Person (Person.personName person1) 33
+    answer = Classic.nqueens 8
 
 
 getConfigIO :: FilePath -> IO ConfigFile.ConfigParser
