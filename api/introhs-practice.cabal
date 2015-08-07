@@ -33,6 +33,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Data.Introhs.Practice.Classic
                      , Data.Introhs.Practice.Sequenceops
+  other-modules:       Data.Introhs.Practice.ClassicPuzzles 
   ghc-options:         -Wall -fno-warn-type-defaults
   ld-options:          "-Wl,-rpath,$ORIGIN/"
   if flag(debug)
@@ -41,7 +42,8 @@ library
     ld-options:        --coverage
   else
     cc-options:        -DNDEBUG -UDEBUG
-  build-depends:       base >= 4.7 && < 5,hslogger
+  build-depends:       base >= 4.7 && < 5,hslogger,mtl,vector,array
+                     , containers
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
 
@@ -62,7 +64,7 @@ test-suite TsMain-introhs-practice
     cc-options:        -DNDEBUG -UDEBUG
   if flag(dynamic)
     ghc-options:       -dynamic
-  build-depends:       base,HUnit,QuickCheck,introhs-util,introhs-practice
+  build-depends:       base,HUnit,QuickCheck,introhs-util,introhs-practice,mtl
                      , test-framework, test-framework-hunit,test-framework-quickcheck2
                      --, tasty, tasty-hunit,tasty-quickcheck
                      --, hspec, hspec-discover,hspec-expectations
