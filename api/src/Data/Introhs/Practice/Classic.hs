@@ -1,6 +1,7 @@
 
 module Data.Introhs.Practice.Classic (module Data.Introhs.Practice.Classic
     , module Data.Introhs.Practice.ClassicPuzzles
+    , module Data.Introhs.Practice.ClassicHiorder
     ) where
 
 import Data.List
@@ -8,6 +9,7 @@ import qualified System.Log as Log
 import qualified Control.Monad.Writer as Writer
 
 import Data.Introhs.Practice.ClassicPuzzles
+import Data.Introhs.Practice.ClassicHiorder
 
 exptR, exptI, fastExptR, fastExptI :: Float -> Float -> Float
 {-

@@ -22,7 +22,9 @@ epsilon = 0.001
 
 caseSquare = mapM_ (\n -> do
     mapM_ (\(funcA, nm) -> assertEqual nm (n ** 2.0) (funcA n)
-        ) [(squareR, "squareR"), (squareI, "squareI")]
+        ) [(squareR, "squareR"), (squareI, "squareI")
+            , (squareF, "squareF"), (squareU, "squareU")
+            , (squareLc, "squareLc")]
     ) [2, 11, 20]
 
 caseExpt = mapM_ (\(b, n) -> do
@@ -30,14 +32,17 @@ caseExpt = mapM_ (\(b, n) -> do
     mapM_ (\(funcA, nm) -> 
         --assertEqual nm (b ** n) (funcA b n)
         assertBool nm (Util.inEpsilon (epsilon * ans) ans (funcA b n))
-        ) [(exptR, "exptR"), (exptI, "exptI")
+        ) [(exptR, "exptR"), (exptI, "exptI"), (exptF, "exptF")
+            , (exptU, "exptU"), (exptLc, "exptLc")
             , (fastExptR, "fastExptR"), (fastExptI, "fastExptI")]
     ) [(b, n) | b <- [2.0, 11.0, 20.0], n <- [3.0, 6.0, 10.0]]
 
 caseSumTo = mapM_ (\(hi, lo) -> do
     let ans = foldl (+) lo [(lo + 1)..hi]
     mapM_ (\(funcA, nm) -> assertEqual nm ans (funcA hi lo)
-        ) [(sumToR, "sumToR"), (sumToI, "sumToI")]
+        ) [(sumToR, "sumToR"), (sumToI, "sumToI")
+            , (sumToF, "sumToF"), (sumToU, "sumToU")
+            , (sumToLc, "sumToLc")]
     ) [(hi, lo) | hi <- [-15, 0, 150], lo <- [-20, 0, 10]]
 
 caseFact = withFixture1 "caseFact" $ mapM_ (\n -> do
@@ -45,19 +50,22 @@ caseFact = withFixture1 "caseFact" $ mapM_ (\n -> do
     mapM_ (\(funcA, nm) -> 
         -- assertEqual nm (product [1..n]) (funcA n)
         assertEqual nm ans (funcA n)
-        ) [(factR, "factR"), (factI, "factI")]
+        ) [(factR, "factR"), (factI, "factI"), (factF, "factF")
+            , (factU, "factU"), (factLc, "factLc")]
     ) [0, 9, 18]
 
 caseFib = mapM_ (\n -> do
     let ans = snd $ foldl (\(s0, s1) _ -> (s0 + s1, s0)) (0, 1) [0..n]
     mapM_ (\(funcA, nm) -> assertEqual nm ans (funcA n)
-        ) [(fibR, "fibR"), (fibI, "fibI")]
+        ) [(fibR, "fibR"), (fibI, "fibI"), (fibF, "fibF")
+            , (fibU, "fibU"), (fibLc, "fibLc")]
     ) [0, 7, 13]
 
 casePascaltri = do
     mapM_ (\(funcA, nm) -> assertEqual nm res (funcA rows)
-        ) [(pascaltriMult, "pascaltriMult")
-            , (pascaltriAdd, "pascaltriAdd")]
+        ) [(pascaltriMult, "pascaltriMult"), (pascaltriAdd, "pascaltriAdd")
+            , (pascaltriF, "pascaltriF"), (pascaltriU, "pascaltriU")
+            , (pascaltriLc, "pascaltriLc")]
   where rows = 5
         res = [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1],  [1, 4, 6, 4, 1], 
             [1, 5, 10, 10, 5, 1]]
@@ -78,23 +86,31 @@ caseGcdLcm = mapM_ (\((funcGcd, gcdNm), (funcLcm, lcmNm)) -> do
         assertEqual lcmNm 48 (funcLcm [24, 16])
         assertEqual lcmNm 96 (funcLcm [24, 16, 32])
         ) [((gcdR, "gcdR"), (lcmR, "lcmR"))
-            , ((gcdI, "gcdI"), (lcmI, "lcmI"))]
+            , ((gcdI, "gcdI"), (lcmI, "lcmI"))
+            , ((gcdF, "gcdF"), (lcmF, "lcmF"))
+            , ((gcdU, "gcdU"), (lcmU, "lcmU"))]
 
 caseBaseExpand = mapM_ (\(funcA, nm) -> do
         assertEqual nm [1, 0, 1, 1] (funcA 2 11)
         assertEqual nm [1, 1, 0, 1] (funcA 4 81)
-        ) [(baseExpandR, "baseExpandR"), (baseExpandI, "baseExpandI")]
+        ) [(baseExpandR, "baseExpandR"), (baseExpandI, "baseExpandI")
+            , (baseExpandF, "baseExpandF"), (baseExpandU, "baseExpandU")
+            , (baseExpandLc, "baseExpandLc")]
 
 caseBaseTo10 = mapM_ (\(funcA, nm) -> do
         assertEqual nm 11 (funcA 2 [1, 0, 1, 1])
         assertEqual nm 81 (funcA 4 [1, 1, 0, 1])
-        ) [(baseTo10R, "baseTo10R"), (baseTo10I, "baseTo10I")]
+        ) [(baseTo10R, "baseTo10R"), (baseTo10I, "baseTo10I")
+            , (baseTo10F, "baseTo10F"), (baseTo10U, "baseTo10U")
+            , (baseTo10Lc, "baseTo10Lc")]
 
 caseRange = mapM_ (\((func, rgNm), (funcStep, rgStepNm)) -> do
         assertEqual rgNm lst (func 0 4)
         assertEqual rgStepNm revlst (funcStep (-1) 4 0)
         ) [((rangeR, "rangeR"), (rangeStepR, "rangeStepR"))
-            , ((rangeI, "rangeI"), (rangeStepI, "rangeStepI"))]
+            , ((rangeI, "rangeI"), (rangeStepI, "rangeStepI"))
+            , ((rangeF, "rangeF"), (rangeStepF, "rangeStepF"))
+            , ((rangeU, "rangeU"), (rangeStepU, "rangeStepU"))]
 
 caseCompose = do
         assertBool "compose1" (Util.inEpsilon (epsilon * n) 

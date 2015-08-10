@@ -1,8 +1,13 @@
 
-module Data.Introhs.Practice.Sequenceops (module Data.Introhs.Practice.Sequenceops) where
+module Data.Introhs.Practice.Sequenceops (
+	module Data.Introhs.Practice.Sequenceops
+	, module Data.Introhs.Practice.SequenceopsHiorder
+	) where
 
 import qualified System.Log as Log
 import qualified Control.Monad.Writer as Writer
+
+import Data.Introhs.Practice.SequenceopsHiorder
 
 tabulateR, tabulateI :: (Int -> a) -> Int -> [a]
 tabulateR func cnt

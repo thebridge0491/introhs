@@ -17,35 +17,36 @@ epsilon = 0.001
 propSquare :: Int -> Property
 propSquare n = (n >= 1) ==>
     foldl (\a f -> a && Util.inEpsilon (epsilon * ans) ans (f $ realToFrac n)) True
-    [squareR, squareI]
+    [squareR, squareI, squareF, squareU, squareLc]
   where ans = realToFrac n ** 2.0
 
 --propExpt :: (Eq a, Show a, Num a) => a -> a -> Bool
 propExpt :: Float -> Float -> Bool
 propExpt b n = foldl (\a f -> a && (Util.inEpsilon (epsilon * ans) ans (f b n))) 
-    True [exptR, exptI, fastExptR, fastExptI]
+    True [exptR, exptI, exptF, exptU, exptLc, fastExptR, fastExptI]
   where ans = b ** n
 
 propSumTo :: Int -> Int -> Bool
 propSumTo hi lo = foldl (\a f -> a && f hi lo == ans) True
-    [sumToR, sumToI]
+    [sumToR, sumToI, sumToF, sumToU, sumToLc]
   where ans = foldl (+) lo [(lo + 1)..hi]
 
 --propFact :: (Eq a, Show a, Ord a, Num a, Enum a) => a -> Bool
 propFact :: Word32 -> Bool
-propFact n = foldl (\a f -> a && f n == ans) True [factR, factI]
+propFact n = foldl (\a f -> a && f n == ans) True [factR, factI, factF
+	, factU, factLc]
   where ans = foldl (*) 1 [1..n]
 
 propFib :: Int -> Bool
 propFib n = foldl (\a f -> a && f n == ans) True 
-    [fibR, fibI] 
+    [fibR, fibI, fibF, fibU, fibLc] 
   where ans = snd $ foldl (\(s0, s1) _ -> (s0 + s1, s0)) (0, 1) [0..n]
 
 propPascaltri :: Int -> Bool
 propPascaltri rows = foldl (\a f -> a && validNumRows (f rows) &&  
         fst (foldl (\(a1, n) r -> (a1 && validLenRow n r && validSumRow n r, 
         n + 1)) (True, 0) (f rows))) True
-        [pascaltriMult, pascaltriAdd]
+        [pascaltriMult, pascaltriAdd, pascaltriF, pascaltriU, pascaltriLc]
   where validNumRows res = length res == rows + 1
         validLenRow n r = length r == n + 1
         validSumRow n r = sum r == truncate (2 ** realToFrac n)
@@ -67,19 +68,19 @@ propGcdLcm xss = case xss of
     x:xs -> (length (x:xs) < 20) ==> 
         foldl (\a (fG, fL) -> a && fG (x:xs) == ansG && fL (x:xs) == ansL
         ) True
-        [(gcdR, lcmR), (gcdI, lcmI)]
+        [(gcdR, lcmR), (gcdI, lcmI), (gcdF, lcmF), (gcdU, lcmU)]
       where (ansG, ansL) = (foldl gcd (abs x) xs, foldl lcm (abs x) xs)
     _ -> True ==> True
 
 propBaseExpand :: Int -> Int -> Bool
 propBaseExpand b n = foldl (\a f -> a && f b n == ans) True 
-    [baseExpandR, baseExpandI]
+    [baseExpandR, baseExpandI, baseExpandF, baseExpandU, baseExpandLc]
   where ans = reverse $ unfoldr (\x -> if x == 0 then Nothing
             else Just (mod x b, div x b)) n
 
 propBaseTo10 :: Int -> [Int] -> Bool
 propBaseTo10 b lst = foldl (\a f -> a && f b lst == ans) True 
-    [baseTo10R, baseTo10I]
+    [baseTo10R, baseTo10I, baseTo10F, baseTo10U, baseTo10Lc]
   where ans = snd $ foldr (\e (h, t) -> 
             (h + 1, t + (e * truncate (fromIntegral b ** fromIntegral h))))
             (0, 0) lst
@@ -87,7 +88,8 @@ propBaseTo10 b lst = foldl (\a f -> a && f b lst == ans) True
 propRange :: Int -> Int -> Bool
 propRange hi lo = foldl (\a (f, fStep) -> a && f lo hi == ans 
     && fStep 1 lo hi == ans) True
-    [(rangeR, rangeStepR), (rangeI, rangeStepI)]
+    [(rangeR, rangeStepR), (rangeI, rangeStepI), (rangeF, rangeStepF)
+		, (rangeU, rangeStepU)]
   where ans = [lo..hi]
 
 propComposeInt :: (Eq c, Show c, Integral c) => (b -> c) -> (a -> b) -> a -> Bool
