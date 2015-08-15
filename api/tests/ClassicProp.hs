@@ -17,36 +17,50 @@ epsilon = 0.001
 propSquare :: Int -> Property
 propSquare n = (n >= 1) ==>
     foldl (\a f -> a && Util.inEpsilon (epsilon * ans) ans (f $ realToFrac n)) True
-    [squareR, squareI, squareF, squareU, squareLc]
+    [squareR, squareI, squareF, squareU, squareLc] &&
+    foldl (\a f -> a && Util.inEpsilon (epsilon * ans) ans (f !! n)) True
+    [squaresMap2, squaresU, squaresLc, squaresScanl]
   where ans = realToFrac n ** 2.0
 
 --propExpt :: (Eq a, Show a, Num a) => a -> a -> Bool
 propExpt :: Float -> Float -> Bool
 propExpt b n = foldl (\a f -> a && (Util.inEpsilon (epsilon * ans) ans (f b n))) 
-    True [exptR, exptI, exptF, exptU, exptLc, fastExptR, fastExptI]
+    True [exptR, exptI, exptF, exptU, exptLc, fastExptR, fastExptI] &&
+    foldl (\a f -> a && Util.inEpsilon (epsilon * ans) ans (f b !! round n)) 
+    True [exptsMap2, exptsU, exptsLc, exptsScanl]
   where ans = b ** n
 
 propSumTo :: Int -> Int -> Bool
 propSumTo hi lo = foldl (\a f -> a && f hi lo == ans) True
-    [sumToR, sumToI, sumToF, sumToU, sumToLc]
+    [sumToR, sumToI, sumToF, sumToU, sumToLc] &&
+    foldl (\a f -> do
+        let res = if null [lo..hi] then lo else f lo !! (hi - lo)
+        a && res == ans) True
+    [sumsMap2, sumsU, sumsLc, sumsScanl]
   where ans = foldl (+) lo [(lo + 1)..hi]
 
 --propFact :: (Eq a, Show a, Ord a, Num a, Enum a) => a -> Bool
 propFact :: Word32 -> Bool
 propFact n = foldl (\a f -> a && f n == ans) True [factR, factI, factF
-	, factU, factLc]
+	, factU, factLc] && foldl (\a f -> a && (f !! fromIntegral n) == ans) True 
+    [factsMap2, factsU, factsLc, factsScanl]
   where ans = foldl (*) 1 [1..n]
 
 propFib :: Int -> Bool
 propFib n = foldl (\a f -> a && f n == ans) True 
-    [fibR, fibI, fibF, fibU, fibLc] 
+    [fibR, fibI, fibF, fibU, fibLc] && foldl (\a f -> a && (f !! n) == ans)
+    True [fibsMap2, fibsU, fibsLc, fibsScanl]
   where ans = snd $ foldl (\(s0, s1) _ -> (s0 + s1, s0)) (0, 1) [0..n]
 
 propPascaltri :: Int -> Bool
 propPascaltri rows = foldl (\a f -> a && validNumRows (f rows) &&  
         fst (foldl (\(a1, n) r -> (a1 && validLenRow n r && validSumRow n r, 
         n + 1)) (True, 0) (f rows))) True
-        [pascaltriMult, pascaltriAdd, pascaltriF, pascaltriU, pascaltriLc]
+        [pascaltriMult, pascaltriAdd, pascaltriF, pascaltriU, pascaltriLc] &&
+    foldl (\a f -> a && validNumRows (take (rows + 1) f) &&  
+        fst (foldl (\(a1, n) r -> (a1 && validLenRow n r && validSumRow n r, 
+        n + 1)) (True, 0) (take (rows + 1) f))) True
+        [pascalrowsMap2, pascalrowsU, pascalrowsLc, pascalrowsScanl]
   where validNumRows res = length res == rows + 1
         validLenRow n r = length r == n + 1
         validSumRow n r = sum r == truncate (2 ** realToFrac n)

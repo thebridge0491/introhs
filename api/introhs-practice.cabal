@@ -36,6 +36,7 @@ library
   other-modules:       Data.Introhs.Practice.ClassicPuzzles 
                      , Data.Introhs.Practice.ClassicHiorder
                      , Data.Introhs.Practice.SequenceopsHiorder
+                     , Data.Introhs.Practice.ClassicStreams
   ghc-options:         -Wall -fno-warn-type-defaults
   ld-options:          "-Wl,-rpath,$ORIGIN/"
   if flag(debug)

@@ -25,6 +25,9 @@ caseSquare = mapM_ (\n -> do
         ) [(squareR, "squareR"), (squareI, "squareI")
             , (squareF, "squareF"), (squareU, "squareU")
             , (squareLc, "squareLc")]
+    mapM_ (\(funcA, nm) -> assertEqual nm (n ** 2.0) (funcA !! round n)
+        ) [(squaresMap2, "squaresMap2"), (squaresU, "squaresU")
+            , (squaresLc, "squaresLc"), (squaresScanl, "squaresScanl")]
     ) [2, 11, 20]
 
 caseExpt = mapM_ (\(b, n) -> do
@@ -35,6 +38,10 @@ caseExpt = mapM_ (\(b, n) -> do
         ) [(exptR, "exptR"), (exptI, "exptI"), (exptF, "exptF")
             , (exptU, "exptU"), (exptLc, "exptLc")
             , (fastExptR, "fastExptR"), (fastExptI, "fastExptI")]
+    mapM_ (\(funcA, nm) ->
+        assertBool nm (Util.inEpsilon (epsilon * ans) ans (funcA b !! round n))
+        ) [(exptsMap2, "exptsMap2"), (exptsU, "exptsU")
+            , (exptsLc, "exptsLc"), (exptsScanl, "exptsScanl")]
     ) [(b, n) | b <- [2.0, 11.0, 20.0], n <- [3.0, 6.0, 10.0]]
 
 caseSumTo = mapM_ (\(hi, lo) -> do
@@ -43,6 +50,11 @@ caseSumTo = mapM_ (\(hi, lo) -> do
         ) [(sumToR, "sumToR"), (sumToI, "sumToI")
             , (sumToF, "sumToF"), (sumToU, "sumToU")
             , (sumToLc, "sumToLc")]
+    mapM_ (\(funcA, nm) -> do
+        let res = if null [lo..hi] then lo else funcA lo !! (hi - lo)
+        assertEqual nm ans res
+        ) [(sumsMap2, "sumsMap2"), (sumsU, "sumsU"), (sumsLc, "sumsLc")
+            , (sumsScanl, "sumsScanl")]
     ) [(hi, lo) | hi <- [-15, 0, 150], lo <- [-20, 0, 10]]
 
 caseFact = withFixture1 "caseFact" $ mapM_ (\n -> do
@@ -52,6 +64,9 @@ caseFact = withFixture1 "caseFact" $ mapM_ (\n -> do
         assertEqual nm ans (funcA n)
         ) [(factR, "factR"), (factI, "factI"), (factF, "factF")
             , (factU, "factU"), (factLc, "factLc")]
+    mapM_ (\(funcA, nm) -> assertEqual nm ans (funcA !! (fromIntegral n))
+        ) [(factsMap2, "factsMap2"), (factsU, "factsU")
+            , (factsLc, "factsLc"), (factsScanl, "factsScanl")]
     ) [0, 9, 18]
 
 caseFib = mapM_ (\n -> do
@@ -59,6 +74,9 @@ caseFib = mapM_ (\n -> do
     mapM_ (\(funcA, nm) -> assertEqual nm ans (funcA n)
         ) [(fibR, "fibR"), (fibI, "fibI"), (fibF, "fibF")
             , (fibU, "fibU"), (fibLc, "fibLc")]
+    mapM_ (\(funcA, nm) -> assertEqual nm ans (funcA !! n)
+        ) [(fibsMap2, "fibsMap2"), (fibsU, "fibsU"), (fibsLc, "fibsLc")
+            , (fibsScanl, "fibsScanl")]
     ) [0, 7, 13]
 
 casePascaltri = do
@@ -66,6 +84,10 @@ casePascaltri = do
         ) [(pascaltriMult, "pascaltriMult"), (pascaltriAdd, "pascaltriAdd")
             , (pascaltriF, "pascaltriF"), (pascaltriU, "pascaltriU")
             , (pascaltriLc, "pascaltriLc")]
+    mapM_ (\(funcA, nm) -> assertEqual nm res (take (rows + 1) funcA)
+        ) [(pascalrowsMap2, "pascalrowsMap2"), (pascalrowsU, "pascalrowsU")
+            , (pascalrowsLc, "pascalrowsLc")
+            , (pascalrowsScanl, "pascalrowsScanl")]
   where rows = 5
         res = [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1],  [1, 4, 6, 4, 1], 
             [1, 5, 10, 10, 5, 1]]
