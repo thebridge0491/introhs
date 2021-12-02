@@ -62,6 +62,11 @@ uncurry3 f3 (x, y, z) = f3 x y z
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
 curry3 f3 x y z = f3 (x, y, z)
 
+headOr :: t -> [t] -> t
+headOr nullDefault xs = case xs of
+    [] -> nullDefault
+    x:_ -> x
+
 inEpsilon :: (Ord a, Num a) => a -> a -> a -> Bool
 inEpsilon tolerance a b =
     --(a - delta) <= b && (a + delta) >= b

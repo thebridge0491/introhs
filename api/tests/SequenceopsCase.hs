@@ -26,91 +26,107 @@ caseTabulate = mapM_ (\((funcA, nm), n) -> do
             (funcA (\e -> e) n)
         assertEqual nm (reverse $ foldl (\a e -> e : a) [] [2..(n - 1 + 2)])
             (funcA (\e -> e + 2) n)
-        ) [(f, n) | f <- [(tabulateR, "tabulateR")
-            , (tabulateI, "tabulateI")], n <- [3, 5, 7]]
+        ) [(f, n) | f <- [(tabulateR, "tabulateR"), (tabulateI, "tabulateI")
+            , (tabulateF, "tabulateF"), (tabulateU, "tabulateU")
+            , (tabulateLc, "tabulateLc")], n <- [3, 5, 7]]
 
 caseLength = mapM_ (\((funcA, nm), n) -> do
         assertEqual nm (length [0..(n - 1)]) (funcA [0..(n - 1)])
         assertEqual nm (length (enumFromTo 0 (n - 1))) 
             (funcA (enumFromTo 0 (n - 1)))
-        ) [(f, n) | f <- [(lengthR, "lengthR"), (lengthI, "lengthI")], 
-            n <- [3, 5, 7]]
+        ) [(f, n) | f <- [(lengthR, "lengthR"), (lengthI, "lengthI")
+			, (lengthF, "lengthF"), (lengthU, "lengthU")], n <- [3, 5, 7]]
 
 caseNth = mapM_ (\((funcA, nm), xs) ->
         assertEqual nm (Just $ xs !! 3) (funcA 3 xs)
-        ) [(f, l) | f <- [(nthR, "nthR"), (nthI, "nthI")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(nthR, "nthR"), (nthI, "nthI"), (nthF, "nthF")
+			, (nthU, "nthU"), (nthLc, "nthLc")], l <- [lst, revlst]]
 
 caseFindIndex = withFixture1 "caseFindIndex" $ mapM_ (\(funcA, nm) -> do
         assertEqual nm (findIndex boolOp lst) (funcA boolOp lst)
         assertEqual nm (findIndex boolOp revlst) (funcA boolOp revlst)
-        ) [(findIndexR, "findIndexR"), (findIndexI, "findIndexI")]
+        ) [(findIndexR, "findIndexR"), (findIndexI, "findIndexI")
+			, (findIndexF, "findIndexF"), (findIndexU, "findIndexU")
+			, (findIndexLc, "findIndexLc")]
     where boolOp = (== 3)
 
 caseFind = mapM_ (\((funcA, nm), xs) ->
         assertEqual nm (find boolOp lst) (funcA boolOp xs)
-        ) [(f, l) | f <- [(findR, "findR"), (findI, "findI")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(findR, "findR"), (findI, "findI"), (findF, "findF")
+			, (findU, "findU"), (findLc, "findLc")], l <- [lst, revlst]]
   where boolOp = (== 3)
 
 caseMinMax = mapM_ (\(((funcMin, nmMin), (funcMax, nmMax)), xs) -> do
         assertEqual nmMin (minimum xs) (funcMin xs)
         assertEqual nmMax (maximum xs) (funcMax xs)
         ) [(f, l) | f <- [((minR, "minR"), (maxR, "maxR"))
-            , ((minI, "minI"), (maxI, "maxI"))],
+            , ((minI, "minI"), (maxI, "maxI"))
+            , ((minF, "minF"), (maxF, "maxF"))
+            , ((minU, "minU"), (maxU, "maxU"))],
             l <- [lst :: [Int], revlst :: [Int]]]
 
 caseReverse = mapM_ (\((funcA, nm), xs) -> 
         assertEqual nm (reverse xs) (funcA xs)
-        ) [(f, l) | f <- [(reverseR, "reverseR"), (reverseI, "reverseI")], 
+        ) [(f, l) | f <- [(reverseR, "reverseR"), (reverseI, "reverseI")
+			, (reverseF, "reverseF"), (reverseU, "reverseU")], 
             l <- [lst, revlst]]
 
 caseCopy = mapM_ (\((funcA, nm), xs) ->
         assertEqual nm xs (funcA xs)
-        ) [(f, l) | f <- [(copyR, "copyR"), (copyI, "copyI")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(copyR, "copyR"), (copyI, "copyI"), (copyF, "copyF")
+			, (copyU, "copyU"), (copyLc, "copyLc")], l <- [lst, revlst]]
 
 caseTakeDrop =  mapM_ (\(((funcTake, nmTake), (funcDrop, nmDrop)), xs) -> do
         assertEqual nmTake (take n xs) (funcTake n xs)
         assertEqual nmDrop (drop n xs) (funcDrop n xs)
-        ) [(f, l) | f <- [((takeI, "takeI"), (dropI, "dropI"))],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [((takeI, "takeI"), (dropI, "dropI"))
+			, ((takeF, "takeF"), (dropF, "dropF"))
+			, ((takeU, "takeU"), (dropU, "dropU"))
+			, ((takeLc, "takeLc"), (dropLc, "dropLc"))], l <- [lst, revlst]]
   where n = 3
 
 caseAnyAll = do
         mapM_ (\((funcAny, nmAny), (funcAll, nmAll)) -> do
             assertEqual nmAny (any boolOp1 lst1) (funcAny boolOp1 lst1)
             assertEqual nmAll (all boolOp1 lst3) (funcAll boolOp1 lst3)
-            ) [((anyR, "anyR"), (allR, "allR")), 
-                ((anyI, "anyI"), (allI, "allI"))]
+            ) [((anyR, "anyR"), (allR, "allR"))
+				, ((anyI, "anyI"), (allI, "allI"))
+				, ((anyF, "anyF"), (allF, "allF"))
+				, ((anyU, "anyU"), (allU, "allU"))]
         mapM_ (\((funcAny, nmAny), (funcAll, nmAll)) -> do
             assertEqual nmAny (any boolOp2 lst2) (funcAny boolOp2 lst2)
             assertEqual nmAll (all boolOp2 lst4) (funcAll boolOp2 lst4)
-            ) [((anyR, "anyR"), (allR, "allR")), 
-                ((anyI, "anyI"), (allI, "allI"))]
+            ) [((anyR, "anyR"), (allR, "allR"))
+				, ((anyI, "anyI"), (allI, "allI"))
+				, ((anyF, "anyF"), (allF, "allF"))
+				, ((anyU, "anyU"), (allU, "allU"))]
   where (boolOp1, boolOp2) = (even, \el -> [] /= el)
         (lst1, lst2) = ([1, 2, 3], [[1, 2], [], [3, 4]])
         (lst3, lst4) = ([6, 2, 4], [[1, 2], [5], [3, 4]])
 
 caseMap = mapM_ (\((funcA, nm), xs) -> 
         assertEqual nm (map proc xs) (funcA proc xs)
-        ) [(f, l) | f <- [(mapR, "mapR"), (mapI, "mapI")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(mapR, "mapR"), (mapI, "mapI"), (mapF, "mapF")
+			, (mapU, "mapU"), (mapLc, "mapLc")], l <- [lst, revlst]]
   where proc = (+ 2)
 
 caseMapM_ = mapM_ (\((funcA, _), xs) -> 
         --assertEqual nm (mapM_ proc xs) (funcA proc xs))
         --(mapM_ proc xs)
         funcA proc xs
-        ) [(f, l) | f <- [(mapM_R, "mapM_R"), (mapM_I, "mapM_I")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(mapM_R, "mapM_R"), (mapM_I, "mapM_I")
+			, (mapM_F, "mapM_F"), (mapM_U, "mapM_U"), (mapM_Lc, "mapM_Lc")
+			], l <- [lst, revlst]]
   where proc = Printf.printf "%d "
 
 caseFilterRemove = mapM_ (\(((funcFilter, nmFilter), (funcRemove, nmRemove)), xs) -> do
         assertEqual nmFilter (filter even xs) (funcFilter even xs)
         assertEqual nmRemove (snd $ partition even xs) (funcRemove even xs)
-        ) [(f, l) | f <- [((filterR, "filterR"), (removeR, "removeR")),
-            ((filterI, "filterI"), (removeI, "removeI"))],
+        ) [(f, l) | f <- [((filterR, "filterR"), (removeR, "removeR"))
+			, ((filterI, "filterI"), (removeI, "removeI"))
+			, ((filterF, "filterF"), (removeF, "removeF"))
+			, ((filterU, "filterU"), (removeU, "removeU"))
+			, ((filterLc, "filterLc"), (removeLc, "removeLc"))],
             l <- [lst, revlst]]
 
 caseFoldl = mapM_ (\((funcA, nm), xs) -> do
@@ -147,11 +163,15 @@ caseUnfoldleft = do
 
 caseIsOrdered = do
     assertEqual "isOrderedR" (verifyfn (<=) lst) (isOrderedR lst False)
-    assertEqual "isOrderedI" (verifyfn (>=) revlst)
-        (isOrderedI revlst True)
-    assertEqual "isOrderedR" (verifyfn (<=) chars1)
-        (isOrderedR chars1 False)
+    assertEqual "isOrderedI" (verifyfn (>=) revlst) (isOrderedI revlst True)
+    assertEqual "isOrderedR" (verifyfn (<=) chars1) (isOrderedR chars1 False)
     assertEqual "isOrderedI" (verifyfn (>=) ltrs1) (isOrderedI ltrs1 True)
+    assertEqual "isOrderedF" (verifyfn (<=) lst) (isOrderedF lst False)
+    assertEqual "isOrderedF" (verifyfn (<=) chars1) (isOrderedF chars1 False)
+    assertEqual "isOrderedU" (verifyfn (>=) revlst) (isOrderedU revlst True)
+    assertEqual "isOrderedU" (verifyfn (>=) ltrs1) (isOrderedU ltrs1 True)
+    assertEqual "isOrderedLc" (verifyfn (>=) revlst) (isOrderedLc revlst True)
+    assertEqual "isOrderedLc" (verifyfn (>=) ltrs1) (isOrderedLc ltrs1 True)
   where verifyfn _ [] = True
         verifyfn cmpfn (x:xs) = 
             fst $ foldl (\(a, cur) e -> ((cmpfn cur e) && a, e)) (True, x) xs
@@ -160,28 +180,32 @@ caseIsOrdered = do
 
 caseAppend = mapM_ (\((funcA, nm), xs) -> 
         assertEqual nm (xs ++ [9, 9, 9, 9]) (funcA xs [9, 9, 9, 9])
-        ) [(f, l) | f <- [(appendR, "appendR"), (appendI, "appendI")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(appendR, "appendR"), (appendI, "appendI")
+			, (appendF, "appendF"), (appendU, "appendU")]
+			, l <- [lst, revlst]]
 
 caseInterleave = mapM_ (\(funcA, nm) ->
         assertEqual nm [0, 9, 1, 9, 2, 9, 3, 9, 4] (funcA lst lst2)
-        ) [(interleaveR, "interleaveR"), (interleaveI, "interleaveI")]
+        ) [(interleaveR, "interleaveR"), (interleaveI, "interleaveI")
+			, (interleaveF, "interleaveF"), (interleaveU, "interleaveU")
+			, (interleaveLc, "interleaveLc")]
   where lst2 = [9, 9, 9, 9]
 
 caseMap2 = mapM_ (\((funcA, nm), xs) -> 
         assertEqual nm (zipWith proc xs xs) (funcA proc xs xs)
-        ) [(f, l) | f <- [(map2R, "map2R"), (map2I, "map2I")],
-            l <- [lst, revlst]]
+        ) [(f, l) | f <- [(map2R, "map2R"), (map2I, "map2I"), (map2F, "map2F")
+			, (map2U, "map2U"), (map2Lc, "map2Lc")], l <- [lst, revlst]]
   where proc e1 e2 = (e1 + e2) + 2
 
 caseZip = mapM_ (\(funcA, nm) -> 
         assertEqual nm (zip lst1 lst2) (funcA lst1 lst2)
-        ) [(zipR, "zipR"), (zipI, "zipI"), (zipM, "zipM")]
+        ) [(zipR, "zipR"), (zipI, "zipI"), (zipM, "zipM"), (zipF, "zipF")
+			, (zipU, "zipU"), (zipLc, "zipLc")]
   where (lst1, lst2) = ([0, 1, 2], [20, 30, 40])
 
 caseUnzip = mapM_ (\(funcA, nm) -> 
         assertEqual nm (unzip xs) (funcA xs)
-        ) [(unzip2I, "unzip2I")]
+        ) [(unzip2I, "unzip2I"), (unzip2F, "unzip2F"), (unzip2U, "unzip2U")]
   where xs = [(0, 20), (1, 30)]
 
 caseConcat = do
@@ -189,6 +213,10 @@ caseConcat = do
         assertEqual "concatR" (concat nlst2) (concatR nlst2)
         assertEqual "concatI" (concat nlst1) (concatI nlst1)
         assertEqual "concatI" (concat nlst2) (concatI nlst2)
+        assertEqual "concatF" (concat nlst1) (concatF nlst1)
+        assertEqual "concatF" (concat nlst2) (concatF nlst2)
+        assertEqual "concatU" (concat nlst1) (concatU nlst1)
+        assertEqual "concatU" (concat nlst2) (concatU nlst2)
   where nlst1 = [[0, 1, 2], [20, 30]]
         nlst2 = [[[0, 1]], [], [[20, 30]]]
 

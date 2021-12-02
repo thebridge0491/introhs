@@ -17,68 +17,69 @@ import Data.Introhs.Practice.Sequenceops
 propTabulate :: Int -> Property
 propTabulate n = (n > 0 && n <= 10) ==> 
     foldl (\a f -> a && f (\e -> e) n == ans && f (\e -> e + 2) n == ans2) True
-    [tabulateR, tabulateI]
+    [tabulateR, tabulateI, tabulateF, tabulateU, tabulateLc]
   where ans = reverse $ foldl (\a e -> e : a) [] [0..(n - 1)]
         ans2 = reverse $ foldl (\a e -> e : a) [] [2..(n - 1 + 2)]
 
 propLength :: (Eq a, Show a) => [a] -> Bool
 propLength xs = foldl (\a f -> a && f xs == ans) True 
-    [lengthR, lengthI]
+    [lengthR, lengthI, lengthF, lengthU]
   where ans = length xs
 
 propNth :: (Eq a, Show a) => Int -> [a] -> Property
 propNth idx xs = (idx >= 0 && idx < length xs) ==> 
     foldl (\a f -> a && f idx xs == Just ans) True 
-    [nthR, nthI]
+    [nthR, nthI, nthF, nthU, nthLc]
   where ans = xs !! idx
 
 propFindIndex :: (Eq a, Show a) => (a -> Bool) -> [a] -> Bool
 propFindIndex pred1 xs = foldl (\a f -> a && f pred1 xs == ans) True 
-    [findIndexR, findIndexI]
+    [findIndexR, findIndexI, findIndexF, findIndexU, findIndexLc]
   where ans = findIndex pred1 xs
 
 propFind pred1 xs = foldl (\a f -> a && f pred1 xs == ans) True 
-    [findR, findI]
+    [findR, findI, findF, findU, findLc]
   where ans = find pred1 xs
 
 propMinMax :: (Eq a, Show a, Ord a) => [a] -> Property
 propMinMax xs = (not . null) xs ==> 
     foldl (\a (fMin, fMax) -> a && fMin xs == ansMin 
         && fMax xs == ansMax) True
-        [(minR, maxR), (minI, maxI)]
+        [(minR, maxR), (minI, maxI), (minF, maxF), (minU, maxU)]
   where (ansMin, ansMax) = (minimum xs, maximum xs)
 
 propReverse :: (Eq a, Show a) => [a] -> Bool
 propReverse xs = foldl (\a f -> a && f xs == ans) True 
-    [reverseR, reverseI]
+    [reverseR, reverseI, reverseF, reverseU]
   where ans = reverse xs
 
 propCopy :: (Eq a, Show a) => [a] -> Bool
 propCopy xs = foldl (\a f -> a && f xs == ans) True 
-    [copyR, copyI]
+    [copyR, copyI, copyF, copyU, copyLc]
   where ans = map id xs
 
 propTakeDrop :: (Eq a, Show a) => Int -> [a] -> Property
 propTakeDrop n xs = (n >= 0 && n < 50) ==> foldl (\a (fT, fD) -> a && 
     fT n xs == ansT && fD n xs == ansD) True 
-    [(takeI, dropI)]
+    [(takeI, dropI), (takeF, dropF), (takeU, dropU), (takeLc, dropLc)]
   where (ansT, ansD) = (take n xs, drop n xs)
 
 propAnyAll :: (Eq a, Show a) => (a -> Bool) -> [a] -> Property
 propAnyAll pred1 xs = (length xs < 50) ==> foldl (\a (fAny, fAll) -> a && 
     fAny pred1 xs == ansAny && fAll pred1 xs == ansAll) True 
-    [(anyR, allR), (anyI, allI)]
+    [(anyR, allR), (anyI, allI), (anyF, allF), (anyU, allU)]
   where (ansAny, ansAll) = (any pred1 xs, all pred1 xs)
 
 propMap :: (Eq b, Show b) => (a -> b) -> [a] -> Bool
 propMap proc xs = foldl (\a f -> a && f proc xs == ans) True 
-    [mapR, mapI]
+    [mapR, mapI, mapF, mapU, mapLc]
   where ans = map proc xs
 
 propFilterRemove :: (Eq a, Show a) => (a -> Bool) -> [a] -> Bool
 propFilterRemove pred1 xs = foldl (\a (fFil, fRem) -> a && 
     fFil pred1 xs == ansFil && fRem pred1 xs == ansRem) True 
-    [(filterR, removeR), (filterI, removeI)]
+    [(filterR, removeR), (filterI, removeI), (filterF, removeF)
+		, (filterU, removeU), (filterLc, removeLc)]
   where (ansFil, ansRem) = (filter pred1 xs, snd $ partition pred1 xs)
 
 propFoldl :: (Eq b, Show b) => (b -> a -> b) -> b -> [a] -> Property
@@ -106,7 +107,7 @@ propUnfoldright func seed = foldl (\a f -> a && f func seed == ans) True
 propIsOrdered :: (Ord a, Show a) => [a] -> Property
 propIsOrdered xs = (length xs < 25) ==> 
     foldl (\a f -> a && f xs False == ans && f xs True == ans2) True 
-    [isOrderedR, isOrderedI]
+    [isOrderedR, isOrderedI, isOrderedF, isOrderedU, isOrderedLc]
   where verifyfn _ [] = True
         verifyfn cmpfn (y:ys) = 
             fst $ foldl (\(a, cur) e -> ((cmpfn cur e) && a, e)) (True, y) ys
@@ -115,13 +116,13 @@ propIsOrdered xs = (length xs < 25) ==>
 
 propAppend :: (Eq a, Show a) => [a] -> [a] -> Bool
 propAppend xs ys = foldl (\a f -> a && f xs ys == ans) True 
-    [appendR, appendI]
+    [appendR, appendI, appendF, appendU]
   where ans = xs ++ ys
 
 propInterleave :: (Eq a, Show a) => [a] -> [a] -> Property
 propInterleave xss yss = (length xss < 50) ==> (length yss < 50) ==>
     foldl (\a f -> a && f xss yss == ans) True
-    [interleaveR, interleaveI]
+    [interleaveR, interleaveI, interleaveF, interleaveU, interleaveLc]
   where ans 
             | length xss > length yss = 
                 concat (zipWith (\x y -> [x, y]) xss yss) ++ 
@@ -132,25 +133,25 @@ propInterleave xss yss = (length xss < 50) ==> (length yss < 50) ==>
 propMap2 :: (Eq c, Show c) => (a -> b -> c) -> [a] -> [b] -> Property
 propMap2 proc xs ys = (length xs < 25) ==> (length ys < 25) ==> 
     foldl (\a f -> a && f proc xs ys == ans) True 
-    [map2R, map2I]
+    [map2R, map2I, map2F, map2U, map2Lc]
   where ans = zipWith proc xs ys
 
 propZip :: (Eq a, Eq b, Show a, Show b) => [a] -> [b] -> Property
 propZip xs ys = (length xs < 25) ==> (length ys < 25) ==> 
     foldl (\a f -> a && f xs ys == ans) True 
-    [zipR, zipI, zipM]
+    [zipR, zipI, zipM, zipF, zipU, zipLc]
   where ans = zip xs ys
 
 propUnzip2 :: (Eq a, Eq b, Show a, Show b) => [(a, b)] -> Property
 propUnzip2 xs = (length xs < 25) ==> 
     foldl (\a f -> a && f xs == ans) True 
-    [unzip2I]
+    [unzip2I, unzip2F, unzip2U]
   where ans = unzip xs
 
 propConcat :: (Eq a, Show a) => [[a]] -> Property
 propConcat nlsts = (length nlsts < 20) ==> 
     foldl (\a f -> a && f nlsts == ans) True 
-    [concatR, concatI]
+    [concatR, concatI, concatF, concatU]
   where ans = concat nlsts
 
 
