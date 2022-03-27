@@ -10,7 +10,7 @@ maintainer:          {{email}}{{^email}}{{repoacct}}{{^repoacct}}imcomputer{{/re
 copyright:           Copyright: (c) {{year}}{{^year}}2015{{/year}} {{author}}{{^author}}{{repoacct}}{{^repoacct}}imcomputer{{/repoacct}}{{/author}}
 category:            {{category}}{{^category}}Data{{/category}}
 build-type:          Simple
-extra-source-files:  stack.yaml.bak,Makefile,*.mk,exclude.lst
+extra-source-files:  stack.yaml.bak,*.mk,exclude.lst
                    , .editorconfig,.hgignore,.gitignore
 data-files:          README{{readmeext}}{{^readmeext}}.rst{{/readmeext}}
                    , resources/*.txt,resources/*.conf,resources/*.json
@@ -46,11 +46,12 @@ executable Main-{{name}}{{^name}}introhs-util{{/name}}
     cc-options:        -DNDEBUG -UDEBUG
   if flag(dynamic)
     ghc-options:       -dynamic
-  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-compat,mtl
+  build-depends:       base >= 4.7 && < 5,hslogger,ini,regex-compat,mtl
                      , regex-posix,text,bytestring,unordered-containers
-                     , random,aeson,json,yaml
+                     , random,yaml,aeson,json
   --extra-lib-dirs:      .
   --extra-libraries:     :libintro_c-practice.a
+  --extra-libraries:     intro_c-practice
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
 {{/executable}}
@@ -67,9 +68,10 @@ library
     ld-options:        --coverage
   else
     cc-options:        -DNDEBUG -UDEBUG
-  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-posix
+  build-depends:       base >= 4.7 && < 5,hslogger,ini,regex-posix
   --extra-lib-dirs:      .
   --extra-libraries:     :libintro_c-practice.a
+  --extra-libraries:     intro_c-practice
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
 {{/executable}}

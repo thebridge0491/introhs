@@ -1,0 +1,54 @@
+Templates for initializing project structure.
+
+Install packages for chosen rendering script:
+  
+  (ruby) gem install [--user-install] mustache
+  
+  [(groovy) grape install com.github.spullara.mustache.java compiler '[0.8.12,)']
+
+  (groovy) grape install com.github.jknack handlebars '[4.1.3,)'
+  
+  (python) pip install [--user] [pystache] chevron
+
+Example usage:
+  
+  ruby render_mustache.rb [--data data.yaml] skeleton-hs [date=2013-10-01]
+  
+  groovy render_mustache.groovy [--data data.yaml] skeleton-hs [--kvset date=2013-10-01]
+  
+  python render_mustache.py [--data data.yaml] skeleton-hs [--kvset date=2013-10-01]
+
+  #resulting project structure
+  
+  echo #---------- ; tree -aF --dirsfirst --matchdirs -I build introhs-util
+
+#----------
+introhs-util
+├── resources/
+│   ├── bolt_new.conf
+│   ├── greet.txt
+│   └── prac.{conf,json,toml,xml,yaml}
+├── src/
+│   └── Data/
+│       └── Introhs/
+│           ├── Classic.hs
+│           ├── Person.hs
+│           ├── Util.hs
+│          [└── Main.hs]
+├── tests/
+│   ├── ClassicCase.hs
+│   ├── ClassicProp.hs
+│   ├── Main.hs
+│   ├── NewCase.hs
+│   └── NewProp.hs
+├── .editorconfig
+├── .{git,hg}ignore
+├── LICENSE
+├── Makefile-aux.mk
+├── README.rst
+├── Setup.hs
+├── exclude.lst
+├── introhs-util.cabal
+└── stack.yaml.bak
+
+5 directories, 26 files

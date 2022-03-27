@@ -1,10 +1,3 @@
-.POSIX:
-.SUFFIXES:
-PREFIX = /usr/local
-VPATH = .
-
-DEBUG = 0
-
 # Single package Makefile script.
 .SUFFIXES: .s .o .a .dyn_o .hs
 help:
@@ -26,30 +19,19 @@ outputdir = dist/build
 outputdir_test = $(outputdir)/TsMain-$(proj)/TsMain-$(proj)-tmp
 
 
+ifneq ($(DEBUG),0)
+#cabal_cfg_opts := $(cabal_cfg_opts) --flags='debug' --ghc-pkg-options='-v'
+cabal_cfg_opts := $(cabal_cfg_opts) --flags='debug'
+else
+cabal_cfg_opts := $(cabal_cfg_opts) --flags='-debug'
+endif
+
 CPPFLAGS := $(CPPFLAGS) -I$(outputdir) -I$(outputdir)/autogen
 ARFLAGS = rvcs
 HSLDFLAGS := $(HSLDFLAGS) -optl-Wl,-rpath,'$$ORIGIN/' -threaded
 HSCFLAGS := $(HSCFLAGS) -Wall -fno-warn-type-defaults
 
-ifeq ($(shell sh -c 'uname -s 2>/dev/null || echo not'),Darwin)
-shlibext = dylib
-else
-shlibext = so
-HSLDFLAGS := $(HSLDFLAGS) -optl-Wl,--enable-new-dtags
-endif
-
-ifneq ($(DEBUG),0)
-HSLDFLAGS := $(HSLDFLAGS) -fhpc
-HSCFLAGS := $(HSCFLAGS) -g -O0 -fhpc
-#cabal_cfg_opts := $(cabal_cfg_opts) --flags='debug' --ghc-pkg-options='-v'
-cabal_cfg_opts := $(cabal_cfg_opts) --flags='debug'
-else
-CPPFLAGS := $(CPPFLAGS) -DNDEBUG -UDEBUG
-HSCFLAGS := $(HSCFLAGS) -O2
-cabal_cfg_opts := $(cabal_cfg_opts) --flags='-debug'
-endif
-
-depns = base hslogger ConfigFile regex-posix{{#executable}} regex-compat mtl text bytestring unordered-containers random aeson json yaml{{/executable}}
+depns = base hslogger ini regex-posix{{#executable}} regex-compat mtl text bytestring unordered-containers random yaml aeson json{{/executable}}
 
 redirect_opts = -dynosuf dyn_o -dynhisuf dyn_hi -outputdir $(outputdir) \
 	-odir $(outputdir) -hidir $(outputdir) -stubdir $(outputdir) \
@@ -69,8 +51,8 @@ objs_dyn_hs = $(shell echo $(src_hs:.hs=.dyn_o) | sed "s|src|$(outputdir)|g")
 
 #depns_test = ... $(proj)
 depns_test = test-framework test-framework-hunit test-framework-quickcheck2
-#depns_test = tasty tasty-hunit tasty-quickcheck
 #depns_test = hspec hspec-discover hspec-expectations
+#depns_test = tasty tasty-hunit tasty-quickcheck
 
 redirect_test_opts = -dynosuf dyn_o -dynhisuf dyn_hi \
 	-outputdir $(outputdir_test) -odir $(outputdir_test) \
@@ -93,7 +75,7 @@ depend $(outputdir)/.depend:
 		`find tests -name '*.hs'`
 
 {{#executable}}
-#$(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) : $(objs_dyn_hs)
+#$(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(sosuffix) : $(objs_dyn_hs)
 
 $(outputdir)/Main-$(proj)/Main-$(proj) : $(src_hs)
 	-@mkdir -p $(outputdir)/Main-$(proj)
@@ -102,7 +84,7 @@ $(outputdir)/Main-$(proj)/Main-$(proj) : $(src_hs)
 		-rtsopts -with-rtsopts=-N $$depns_pkgids $^ -o $@ $(ldlibs_hs)
 {{/executable}}
 {{^executable}}
-$(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) : $(objs_dyn_hs)
+$(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(sosuffix) : $(objs_dyn_hs)
 {{/executable}}
 
 $(outputdir)/TsMain-$(proj)/TsMain-$(proj) : $(tests_hs)
@@ -118,11 +100,11 @@ configure: ## configure cabal [ARGS""]
 	-cabal configure -v $(cabal_cfg_opts) $(ARGS) > dist/cabal.conf
 
 {{#executable}}
-#all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/libHS$(pkg_id).a($(objs_hs)) $(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) ## compile
+#all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/libHS$(pkg_id).a($(objs_hs)) $(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(sosuffix) ## compile
 all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/Main-$(proj)/Main-$(proj) ## compile
 {{/executable}}
 {{^executable}}
-all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/libHS$(pkg_id).a($(objs_hs)) $(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(shlibext) ## compile
+all build: $(outputdir)/.depend $(outputdir)/.depend_test $(src_hs:.hs=.o) $(outputdir)/libHS$(pkg_id).a($(objs_hs)) $(outputdir)/libHS$(pkg_id)-ghc$(ghc_ver).$(sosuffix) ## compile
 {{/executable}}
 testCompile: $(outputdir)/TsMain-$(proj)/TsMain-$(proj) ## compile test
 

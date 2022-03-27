@@ -1,26 +1,26 @@
 {
+  "parentregex": "^[a-z][-a-z0-9]+$",
+  "projectregex": "^[a-z][a-z0-9]+$",
+  "separator": "-",
+  "joiner": ".",
   "groupid": false,
   "category": "Data",
   "parent": "introhs",
   "parentdescription": "Multi-package project Intro examples for Haskell.",
   "project": "util",
-  "description": "Utilites sub-package for Haskell Intro examples project.",
+  "description": "Utilities sub-package for Haskell Intro examples project.",
   "version": "0.1.0",
-  "separator": "-",
-  "joiner": ".",
-  "parentregex": "^[a-z][-a-z0-9]+$",
-  "projectregex": "^[a-z][a-z0-9]+$",
   
   "repohost": "bitbucket.org",
   "repoacct": "imcomputer",
-  "date": "2015-08-01",
+  "date": "2013-10-01",
   
   "readmeext": ".rst",
   "license": "Apache-2.0",
   "buildtool": "stack",
   "testfrwk": "test-framework",
   
-  "ffilib": false,
+  "ffilib": "none",
   
   "skeletondir": "Templates/mustache/skeleton-hs",
   
@@ -30,7 +30,7 @@
       "Unlicense", "Not open source"],
     "buildtool": ["stack", "cabal", "make"],
     "testfrwk": ["test-framework", "hspec", "tasty"],
-    "executable": [false, "yes"],
-    "ffilib": [false, "foreign"]
+    "executable": ["no", "yes"],
+    "ffilib": ["none", "foreign"]
   }
 }
