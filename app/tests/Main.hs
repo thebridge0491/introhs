@@ -1,7 +1,7 @@
 #!/bin/sh
 {-
 EXTRA_PKGDB=`find $HOME/.stack/snapshots -type f -name package.cache -exec dirname {} \;`
-DEPNS_PKGIDS=`for pkg in base test-framework-hunit test-framework-quickcheck2 vector array dequeue abstract-deque pqueue containers unordered-containers ; do echo -n -package-id= ; ghc-pkg --global --user --package-db=$EXTRA_PKGDB --simple-output field $pkg id | head -n1 ; done`
+DEPNS_PKGIDS=`for pkg in base test-framework-hunit test-framework-quickcheck2 vector array deque abstract-deque pqueue containers unordered-containers ; do echo -n -package-id= ; ghc-pkg --global --user --package-db=$EXTRA_PKGDB --simple-output field $pkg id | head -n1 ; done`
 
 #exec ghci -v1 -Wall -fno-warn-type-defaults -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N -i -isrc:tests -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS $0
 exec runhaskell -v1 -Wall -fno-warn-type-defaults -fno-warn-missing-signatures -rtsopts -with-rtsopts=-N -i -isrc:tests -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS $0 $@

@@ -1,6 +1,6 @@
 name:                introhs-util
 version:             0.1.0
-synopsis:            Utilites sub-package for Haskell Intro examples project.
+synopsis:            Utilities sub-package for Haskell Intro examples project.
 description:         Please see README.rst
 homepage:            https://bitbucket.org/thebridge0491/introhs#readme
 license:             Apache-2.0
@@ -10,7 +10,7 @@ maintainer:          thebridge0491-codelab@yahoo.com
 copyright:           Copyright: (c) 2015 thebridge0491
 category:            Data
 build-type:          Simple
-extra-source-files:  stack.yaml.bak,Makefile,*.mk,exclude.lst
+extra-source-files:  stack.yaml.bak,*.mk,exclude.lst
                    , .editorconfig,.hgignore,.gitignore
 data-files:          README.rst
                    , resources/*.txt,resources/*.conf,resources/*.json
@@ -40,7 +40,7 @@ library
     ld-options:        --coverage
   else
     cc-options:        -DNDEBUG -UDEBUG
-  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-posix
+  build-depends:       base >= 4.7 && < 5,hslogger,ini,regex-posix
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
 

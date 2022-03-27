@@ -4,7 +4,7 @@ help:
 
 #MAKE = make # (GNU make variants: make (Linux) gmake (FreeBSD)
 
-STACK ?= stack --resolver lts-2.2.0
+STACK ?= stack --resolver lts-18.10
 
 parent = introhs
 version = 0.1.0
@@ -42,27 +42,31 @@ uninstall-user install-user: $(SUBDIRS) ## [un]install to user HOME ghc package 
 		else $(STACK) exec ghc-pkg -- describe $$proj-$$version | \
 				ghc-pkg register --user - ; fi \
 	done
-	-ghc-pkg list --user --package-db=`$(STACK) path --local-pkg-db`
+	-ghc-pkg list --user
 
 #----------------------------------------
-FMTS ?= tar.gz
+FMTS ?= tar.gz,zip
 distdir = $(parent)-$(version)
 
-.PHONY: dist
-dist: $(SUBDIRS)
+build/$(distdir) : 
 	-@mkdir -p build/$(distdir) ; cp -f exclude.lst build/
 #	#-zip -9 -q --exclude @exclude.lst -r - . | unzip -od build/$(distdir) -
 	-tar --format=posix --dereference --exclude-from=exclude.lst -cf - . | tar -xpf - -C build/$(distdir)
-	
+
+.PHONY: dist
+dist | build/$(distdir): $(SUBDIRS)
 	-@for fmt in `echo $(FMTS) | tr ',' ' '` ; do \
 		case $$fmt in \
+			7z) echo "### build/$(distdir).7z ###" ; \
+				rm -f build/$(distdir).7z ; \
+				(cd build ; 7za a -t7z -mx=9 $(distdir).7z $(distdir)) ;; \
 			zip) echo "### build/$(distdir).zip ###" ; \
 				rm -f build/$(distdir).zip ; \
 				(cd build ; zip -9 -q -r $(distdir).zip $(distdir)) ;; \
-			*) tarext=`echo $$fmt | grep -e '^tar$$' -e '^tar.xz$$' -e '^tar.bz2$$' || echo tar.gz` ; \
+			*) tarext=`echo $$fmt | grep -e '^tar$$' -e '^tar.xz$$' -e '^tar.zst$$' -e '^tar.bz2$$' || echo tar.gz` ; \
 				echo "### build/$(distdir).$$tarext ###" ; \
 				rm -f build/$(distdir).$$tarext ; \
-				(cd build ; tar --posix -L -caf $(distdir).$$tarext $(distdir)) ;; \
+				(cd build ; tar --posix -h -caf $(distdir).$$tarext $(distdir)) ;; \
 		esac \
 	done
 	-@rm -r build/$(distdir)

@@ -10,7 +10,7 @@ maintainer:          thebridge0491-codelab@yahoo.com
 copyright:           Copyright: (c) 2015 thebridge0491
 category:            Data
 build-type:          Simple
-extra-source-files:  stack.yaml.bak,Makefile,*.mk,exclude.lst
+extra-source-files:  stack.yaml.bak,*.mk,exclude.lst
                    , .editorconfig,.hgignore,.gitignore
 data-files:          README.rst
                    , resources/*.txt,resources/*.conf,resources/*.json

@@ -13,7 +13,8 @@ import qualified Data.Array as A
 import qualified Data.Set as S
 import qualified Data.Map.Lazy as M
 import qualified Data.HashMap.Lazy as H
-import qualified Data.Dequeue as D
+--import qualified Data.Dequeue as D
+import qualified Deque.Strict as D
 import qualified Data.Concurrent.Deque.Reference as DequeRef
 import qualified Data.Concurrent.Deque.Class as DequeCls
 import qualified Data.PQueue.Min as MinHeap
@@ -146,7 +147,7 @@ caseHashtbls = do
   where lst_chars = ['a', 'b', 'c']
         lst_strs = ["ltr 01", "ltr 02", "ltr 03"]
         htbl1 = H.fromList $ zip lst_strs lst_chars :: H.HashMap String Char
-
+{-
 caseDequeues1 = do
     assertBool "make-queue" $ let _ = D.empty :: D.BankersDequeue Float 
         in True
@@ -156,6 +157,16 @@ caseDequeues1 = do
     assertBool "dequeue" $ fst (Maybe.fromJust (D.popFront queue)) == 25.7
   where lst_floats = [25.7, 0.1, 78.5, 52.3]
         queue = D.fromList lst_floats :: D.BankersDequeue Float
+-}
+caseDequeues1 = do
+    assertBool "make-queue" $ let _ = D.fromConsAndSnocLists [] [] :: D.Deque Float 
+        in True
+    assertBool "empty" $ D.null queue == False
+    assertBool "peek" $ (Maybe.fromJust $ D.head queue) == 25.7
+    assertBool "enqueue" $ let _ = D.snoc (-5.0) queue in True
+    assertBool "dequeue" $ fst (Maybe.fromJust (D.uncons queue)) == 25.7
+  where lst_floats = [25.7, 0.1, 78.5, 52.3]
+        queue = D.fromConsAndSnocLists lst_floats [] :: D.Deque Float
 
 caseDequeues2 = do
     queue <- DequeCls.newQ :: IO (DequeRef.SimpleDeque Float)

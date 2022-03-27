@@ -3,7 +3,7 @@ Introhs.Util
 .. .rst to .html: rst2html5 foo.rst > foo.html
 ..                pandoc -s -f rst -t html5 -o foo.html foo.rst
 
-Utilites sub-package for Haskell Intro examples project.
+Utilities sub-package for Haskell Intro examples project.
 
 Installation
 ------------

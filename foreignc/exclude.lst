@@ -36,3 +36,6 @@ dist/*
 .hypothesis/*
 .jip/*
 javalib/*
+
+.stack-work
+stack.yaml

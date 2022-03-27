@@ -10,7 +10,7 @@ maintainer:          thebridge0491-codelab@yahoo.com
 copyright:           Copyright: (c) 2015 thebridge0491
 category:            Data
 build-type:          Simple
-extra-source-files:  stack.yaml.bak,Makefile,*.mk,exclude.lst
+extra-source-files:  stack.yaml.bak,*.mk,exclude.lst
                    , .editorconfig,.hgignore,.gitignore
 data-files:          README.rst
                    , resources/*.txt,resources/*.conf,resources/*.json
@@ -44,9 +44,9 @@ executable Main-introhs-intro
     cc-options:        -DNDEBUG -UDEBUG
   if flag(dynamic)
     ghc-options:       -dynamic
-  build-depends:       base >= 4.7 && < 5,hslogger,ConfigFile,regex-compat,mtl
+  build-depends:       base >= 4.7 && < 5,hslogger,ini,regex-compat,mtl
                      , time,regex-posix,text,bytestring,unordered-containers
-                     , vector,random,aeson,json,yaml,introhs-util
+                     , vector,random,yaml,aeson,json,introhs-util
                      , introhs-practice
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts
@@ -72,7 +72,7 @@ test-suite TsMain-introhs-intro
                      , test-framework, test-framework-hunit,test-framework-quickcheck2
                      --, tasty, tasty-hunit,tasty-quickcheck
                      --, hspec, hspec-discover,hspec-expectations
-                     , vector,array,dequeue,abstract-deque,pqueue,containers
+                     , vector,array,deque,abstract-deque,pqueue,containers
                      , unordered-containers 
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings,FlexibleContexts

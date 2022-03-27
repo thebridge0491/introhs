@@ -10,7 +10,8 @@ import qualified System.Log.Formatter as Formatter
 
 import qualified Text.Regex.Posix as RegexP
 
-import qualified Data.ConfigFile as ConfigFile
+--import qualified Data.ConfigFile as ConfigFile
+import qualified Data.Ini as Ini
 
 withFormatter :: Handler.LogHandler a => a -> a
 withFormatter hdlr = Handler.setFormatter hdlr fmtr
@@ -33,6 +34,7 @@ logFileHdlrWithFormat fmtr path logpri = do
   where rexp = RegexP.makeRegexOpts (RegexP.defaultCompOpt +
           RegexP.compIgnoreCase) RegexP.defaultExecOpt pat
 
+{-
 iniCfgToString :: ConfigFile.ConfigParser -> String
 iniCfgToString cfg = foldr (\el acc1 -> foldr (\(a, b) acc2 -> 
     concat ["(", a, ", ", b, ")", ", ", acc2]) "" el ++ acc1) "" items
@@ -40,6 +42,13 @@ iniCfgToString cfg = foldr (\el acc1 -> foldr (\(a, b) acc2 ->
             let optVals = either (const []) id $ ConfigFile.items cfg el
             in map (\(o, v) -> (concat [el, ":", o], v)) optVals : acc) [] $
                 "DEFAULT" : ConfigFile.sections cfg
+-}
+{-
+iniCfgToString :: ConfigFile.ConfigParser -> String
+iniCfgToString cfg = ConfigFile.to_string cfg
+-}
+iniCfgToString :: Ini.Ini -> String
+iniCfgToString cfg = show $ Ini.unIni cfg
 
 mkStringInit :: (String, String, String) -> (a -> String) -> [a] -> String
 mkStringInit (beg, sep, stop) el_fmt lst = case lst of

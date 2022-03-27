@@ -1,7 +1,7 @@
 #!/bin/sh
 {-
 EXTRA_PKGDB=`find $HOME/.stack/snapshots -type f -name package.cache -exec dirname {} \;`
-DEPNS_PKGIDS=`for pkg in base hslogger ConfigFile regex-compat random aeson json yaml ; do echo -n -package-id= ; ghc-pkg --global --user --package-db=$EXTRA_PKGDB --simple-output field $pkg id | head -n1 ; done`
+DEPNS_PKGIDS=`for pkg in base hslogger ini regex-compat random aeson json yaml ; do echo -n -package-id= ; ghc-pkg --global --user --package-db=$EXTRA_PKGDB --simple-output field $pkg id | head -n1 ; done`
 
 #exec ghci -v1 -Wall -rtsopts -with-rtsopts=-N -i -isrc -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS $0
 exec runhaskell -v1 -Wall -rtsopts -with-rtsopts=-N -i -isrc -global-package-db -user-package-db -package-db=$EXTRA_PKGDB $DEPNS_PKGIDS $0 $@
@@ -33,14 +33,15 @@ import qualified System.Random as Random
 import qualified Text.Regex as Regex
 --import qualified Text.Regex.Posix as RegexP
 
-import qualified Data.ConfigFile as ConfigFile
+--import qualified Data.ConfigFile as ConfigFile
+import qualified Data.Ini as Ini
 import qualified Data.Text as Text
 import qualified Data.ByteString.Char8 as BChar8
 import qualified Data.ByteString.Lazy.Char8 as BLChar8
 import qualified Data.HashMap.Lazy as H
-import qualified Data.Aeson as AeJSON
-import qualified Data.Yaml as Yaml
-import qualified Text.JSON as JSON
+--import qualified Data.Aeson as AeJSON
+--import qualified Data.Yaml as Yaml
+--import qualified Text.JSON as JSON
 
 import qualified Data.Vector as V
 import qualified Data.Time as Time
@@ -172,16 +173,25 @@ runIntro rsrc_path opts = do
     answer = Classic.nqueens 8
 
 
+{-
 getConfigIO :: FilePath -> IO ConfigFile.ConfigParser
 getConfigIO confFile = do
-    --ioConfParser <- ConfigFile.readfile ConfigFile.emptyCP confFile
-    --return $ either (const ConfigFile.emptyCP) id ioConfParser
+    {-ioConfParser <- ConfigFile.readfile ConfigFile.emptyCP confFile
+    return $ either (const ConfigFile.emptyCP) id ioConfParser-}
     e <- Exception.try $ ConfigFile.readfile ConfigFile.emptyCP confFile
     case e of
-        Left (exc :: Exception.IOException) -> 
-            return ConfigFile.emptyCP
+        Left (exc :: Exception.IOException) -> return ConfigFile.emptyCP
         Right ioConfParser -> return $ either (const ConfigFile.emptyCP) id ioConfParser
-
+-}
+getConfigIO :: FilePath -> IO Ini.Ini
+getConfigIO confFile = do
+    {-ioIniParser <- Ini.readIniFile confFile
+    return $ either (const (Ini.Ini H.empty [])) id ioIniParser-}
+    e <- Exception.try $ Ini.readIniFile confFile
+    case e of
+        Left (exc :: Exception.IOException) -> return (Ini.Ini H.empty [])
+        Right ioIniParser -> return $ either (const (Ini.Ini H.empty [])) id ioIniParser
+{-
 deserializeStr :: String -> String -> AeJSON.Object
 deserializeStr str1 fmt1 = 
     if "yaml" == fmt1 then
@@ -190,7 +200,7 @@ deserializeStr str1 fmt1 =
         else
         Maybe.fromMaybe H.empty (AeJSON.decode (BLChar8.pack str1) :: 
             Maybe AeJSON.Object)
-
+-}
 specList :: [GetOpt.OptDescr (OptsRecord -> OptsRecord)]
 specList =
     [GetOpt.Option "h" ["help"]
@@ -285,8 +295,10 @@ main = do
     let AeJSON.String user1Name = H.lookupDefault "" "name" user1Lst
     -}
     let lst = [(Util.iniCfgToString ini_cfg 
-            , either (const "") id $ ConfigFile.get ini_cfg "default" "domain"
-            , either (const "") id $ ConfigFile.get ini_cfg "user1" "name")
+            {- , either (const "") id $ ConfigFile.get ini_cfg "default" "domain"
+            , either (const "") id $ ConfigFile.get ini_cfg "user1" "name") -}
+            , show $ either (const "") id $ Ini.lookupValue "default" "domain" ini_cfg
+            , show $ either (const "") id $ Ini.lookupValue "user1" "name" ini_cfg)
             {- , (show $ (\(JSON.Ok alst) -> alst) jsonobj
             , JSON.fromJSString ((\(JSON.Ok res) -> res) domain1)
             , JSON.fromJSString ((\(JSON.Ok res) -> res) user1Name1))
